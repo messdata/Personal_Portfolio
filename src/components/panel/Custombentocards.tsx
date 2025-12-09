@@ -145,26 +145,28 @@ const CustomBentoCards: React.FC<CustomBentoCardsProps> = ({
   }, []);
 
   // Realtime subscription for messages
-  useEffect(() => {
-   if (!supabase) return;
-      .channel('messages-changes')
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'messages' },
-        async () => {
-          const { data } = await supabase.from('messages').select('id, is_read');
-          if (data) {
-            setTotalMessages(data.length);
-            setUnreadMessages(data.filter((m) => !m.is_read).length);
-          }
+  seEffect(() => {
+  if (!supabase) return;
+  
+  const projectsChannel = supabase
+    .channel('projects-changes')
+    .on(
+      'postgres_changes',
+      { event: '*', schema: 'public', table: 'projects' },
+      async () => {
+        const { data } = await supabase.from('projects').select('id, visible');
+        if (data) {
+          setTotalProjects(data.length);
+          setVisibleProjects(data.filter((p) => p.visible).length);
         }
-      )
-      .subscribe();
+      }
+    )
+    .subscribe();
 
-    return () => {
-      supabase.removeChannel(messagesChannel);
-    };
-  }, []);
+  return () => {
+    supabase.removeChannel(projectsChannel);
+  };
+}, []);
 
   // Realtime subscription for analytics
   useEffect(() => {
