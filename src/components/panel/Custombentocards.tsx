@@ -145,7 +145,7 @@ const CustomBentoCards: React.FC<CustomBentoCardsProps> = ({
   }, []);
 
   // Realtime subscription for messages
-  seEffect(() => {
+  useEffect(() => {
   if (!supabase) return;
   
   const projectsChannel = supabase
