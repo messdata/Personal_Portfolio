@@ -1,6 +1,6 @@
 import { useRef, useEffect, useState } from 'react';
 import { gsap } from 'gsap';
-import { createClient } from '@supabase/supabase-js';
+import { supabase } from '../../lib/supabase';
 import Counter from './Counter';
 import './CustomBentoCards.css';
 
@@ -124,7 +124,7 @@ const CustomBentoCards: React.FC<CustomBentoCardsProps> = ({
 
   // Realtime subscription for projects
   useEffect(() => {
-    const projectsChannel = supabase
+    if (!supabase) return;  
       .channel('projects-changes')
       .on(
         'postgres_changes',
