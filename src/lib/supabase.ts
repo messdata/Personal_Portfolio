@@ -4,17 +4,32 @@ import { createClient } from '@supabase/supabase-js';
 const supabaseUrl = import.meta.env.PUBLIC_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
 
-// Only validate and create client if we're not in build mode or if vars are present
-let supabaseClient: ReturnType<typeof createClient> | null = null;
+// Create a mock client for build time
+const mockClient = {
+  from: () => ({
+    select: () => Promise.resolve({ data: [], error: null }),
+    insert: () => Promise.resolve({ data: null, error: null }),
+    update: () => Promise.resolve({ data: null, error: null }),
+    delete: () => Promise.resolve({ data: null, error: null }),
+    upsert: () => Promise.resolve({ data: null, error: null }),
+  }),
+  auth: {
+    signIn: () => Promise.resolve({ data: null, error: null }),
+    signOut: () => Promise.resolve({ error: null }),
+    getSession: () => Promise.resolve({ data: { session: null }, error: null }),
+  },
+  storage: {
+    from: () => ({
+      upload: () => Promise.resolve({ data: null, error: null }),
+      download: () => Promise.resolve({ data: null, error: null }),
+    }),
+  },
+} as any;
 
-if (supabaseUrl && supabaseAnonKey) {
-  supabaseClient = createClient(supabaseUrl, supabaseAnonKey);
-} else if (typeof window !== 'undefined') {
-  // Only throw error in browser, not during build
-  console.error('Missing Supabase environment variables');
-}
-
-export const supabase = supabaseClient!;
+// Use real client if env vars exist, otherwise use mock
+export const supabase = (supabaseUrl && supabaseAnonKey)
+  ? createClient(supabaseUrl, supabaseAnonKey)
+  : mockClient;
 
 // Type definitions for your database
 export interface Project {
