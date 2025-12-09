@@ -4,26 +4,59 @@ import { createClient } from '@supabase/supabase-js';
 const supabaseUrl = import.meta.env.PUBLIC_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
 
+// Create a chainable mock query builder for build time
+const createMockQueryBuilder = () => {
+  const mockQuery = {
+    select: () => mockQuery,
+    insert: () => mockQuery,
+    update: () => mockQuery,
+    delete: () => mockQuery,
+    upsert: () => mockQuery,
+    eq: () => mockQuery,
+    neq: () => mockQuery,
+    gt: () => mockQuery,
+    gte: () => mockQuery,
+    lt: () => mockQuery,
+    lte: () => mockQuery,
+    like: () => mockQuery,
+    ilike: () => mockQuery,
+    is: () => mockQuery,
+    in: () => mockQuery,
+    contains: () => mockQuery,
+    containedBy: () => mockQuery,
+    range: () => mockQuery,
+    match: () => mockQuery,
+    not: () => mockQuery,
+    or: () => mockQuery,
+    filter: () => mockQuery,
+    order: () => mockQuery,
+    limit: () => mockQuery,
+    range: () => mockQuery,
+    single: () => Promise.resolve({ data: null, error: null }),
+    maybeSingle: () => Promise.resolve({ data: null, error: null }),
+    then: (resolve: any) => resolve({ data: [], error: null }),
+  };
+  return mockQuery;
+};
+
 // Create a mock client for build time
 const mockClient = {
-  from: () => ({
-    select: () => Promise.resolve({ data: [], error: null }),
-    insert: () => Promise.resolve({ data: null, error: null }),
-    update: () => Promise.resolve({ data: null, error: null }),
-    delete: () => Promise.resolve({ data: null, error: null }),
-    upsert: () => Promise.resolve({ data: null, error: null }),
-  }),
+  from: () => createMockQueryBuilder(),
   auth: {
     signIn: () => Promise.resolve({ data: null, error: null }),
     signOut: () => Promise.resolve({ error: null }),
     getSession: () => Promise.resolve({ data: { session: null }, error: null }),
+    getUser: () => Promise.resolve({ data: { user: null }, error: null }),
   },
   storage: {
     from: () => ({
       upload: () => Promise.resolve({ data: null, error: null }),
       download: () => Promise.resolve({ data: null, error: null }),
+      remove: () => Promise.resolve({ data: null, error: null }),
+      list: () => Promise.resolve({ data: [], error: null }),
     }),
   },
+  rpc: () => Promise.resolve({ data: null, error: null }),
 } as any;
 
 // Use real client if env vars exist, otherwise use mock
