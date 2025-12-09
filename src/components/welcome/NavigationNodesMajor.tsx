@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import NavigationNode from './Navigationnode';
+import NavigationNode from './NavigationNodeMini.tsx';
 
 interface NavigationNodesProps {
     isVisible?: boolean;
