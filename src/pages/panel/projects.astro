@@ -13,8 +13,6 @@ if (supabase) {
     .order("created_at", { ascending: false });
 
   allProjects = projects || [];
-  const visibleProjects = allProjects.filter((p) => p.visible);
-  const draftProjects = allProjects.filter((p) => !p.visible);
 }
 ---
 
