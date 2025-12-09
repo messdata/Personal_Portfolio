@@ -31,7 +31,6 @@ const createMockQueryBuilder = () => {
     filter: () => mockQuery,
     order: () => mockQuery,
     limit: () => mockQuery,
-    range: () => mockQuery,
     single: () => Promise.resolve({ data: null, error: null }),
     maybeSingle: () => Promise.resolve({ data: null, error: null }),
     then: (resolve: any) => resolve({ data: [], error: null }),
