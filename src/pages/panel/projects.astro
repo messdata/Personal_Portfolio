@@ -6,14 +6,16 @@ import Particles from "../../components/welcome/Particles";
 import { supabase } from "../../lib/supabase";
 
 // Fetch all projects from Supabase
-const { data: projects, error } = await supabase
-  .from("projects")
-  .select("*")
-  .order("created_at", { ascending: false });
+if (supabase) {
+  const { data: projects, error } = await supabase
+    .from("projects")
+    .select("*")
+    .order("created_at", { ascending: false });
 
-const allProjects = projects || [];
-const visibleProjects = allProjects.filter((p) => p.visible);
-const draftProjects = allProjects.filter((p) => !p.visible);
+  allProjects = projects || [];
+  const visibleProjects = allProjects.filter((p) => p.visible);
+  const draftProjects = allProjects.filter((p) => !p.visible);
+}
 ---
 
 <PanelLayout title="Projects - MindTree Panel">
