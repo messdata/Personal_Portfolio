@@ -1,0 +1,1499 @@
+---
+// src/pages/panel/projects.astro
+import PanelLayout from "../../components/panel/Layout/PanelLayout.astro";
+import PillNavbar from "../../components/panel/PillNavbar.astro";
+import Particles from "../../components/welcome/Particles";
+import { supabase } from "../../lib/supabase";
+
+// Fetch all projects from Supabase
+const { data: projects, error } = await supabase
+  .from("projects")
+  .select("*")
+  .order("created_at", { ascending: false });
+
+const allProjects = projects || [];
+const visibleProjects = allProjects.filter((p) => p.visible);
+const draftProjects = allProjects.filter((p) => !p.visible);
+---
+
+<PanelLayout title="Projects - MindTree Panel">
+  <style is:global>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      margin: 0 !important;
+      padding: 0 !important;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: #060010;
+      font-family:
+        "Inter",
+        system-ui,
+        -apple-system,
+        sans-serif;
+    }
+
+    /* CSS Variables */
+    :root {
+      --border-color: #392e4e;
+      --background-dark: #060010;
+      --purple-primary: rgba(132, 0, 255, 1);
+      --purple-glow: rgba(132, 0, 255, 0.2);
+    }
+
+    /* Scroll Indicators */
+    .scroll-indicators {
+      position: fixed;
+      right: 2rem;
+      top: 50%;
+      transform: translateY(-50%);
+      z-index: 999;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .scroll-indicator {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      padding: 0.5rem;
+      border-radius: 8px;
+      text-decoration: none;
+    }
+
+    .scroll-indicator:hover {
+      background: rgba(255, 255, 255, 0.02);
+    }
+
+    .scroll-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.3);
+      transition: all 0.3s ease;
+    }
+
+    .scroll-indicator.active .scroll-dot {
+      background: white;
+      width: 8px;
+      height: 8px;
+      box-shadow: 0 0 12px rgba(255, 255, 255, 0.3);
+    }
+
+    .scroll-label {
+      font-size: 0.75rem;
+      color: rgba(255, 255, 255, 0.5);
+      font-weight: 500;
+      opacity: 0;
+      transition: all 0.3s ease;
+      white-space: nowrap;
+    }
+
+    .scroll-indicator:hover .scroll-label,
+    .scroll-indicator.active .scroll-label {
+      opacity: 1;
+    }
+
+    /* Main Container */
+    .panel-container {
+      width: 100%;
+      height: 100vh;
+      overflow-y: auto;
+      scroll-behavior: smooth;
+    }
+
+    .panel-container::-webkit-scrollbar {
+      width: 4px;
+    }
+
+    .panel-container::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    .panel-container::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 2px;
+    }
+
+    /* Panel Section */
+    .panel-section {
+      position: relative;
+      width: 100%;
+      min-height: 100vh;
+      padding: 6rem 2rem 4rem 2rem;
+    }
+
+    .section-content {
+      max-width: 1400px;
+      margin: 0 auto;
+      z-index: 10;
+    }
+
+    /* Header */
+    .section-header {
+      margin-bottom: 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+
+    .header-left h1 {
+      font-size: 2rem;
+      font-weight: 600;
+      color: white;
+      margin-bottom: 0.5rem;
+      letter-spacing: -0.02em;
+    }
+
+    .header-left p {
+      font-size: 0.875rem;
+      color: rgba(255, 255, 255, 0.4);
+    }
+
+    .create-btn {
+      padding: 0.75rem 1.5rem;
+      background: linear-gradient(
+        135deg,
+        rgba(132, 0, 255, 0.2),
+        rgba(167, 139, 250, 0.2)
+      );
+      border: 1px solid rgba(132, 0, 255, 0.3);
+      border-radius: 8px;
+      color: #8b5cf6;
+      font-size: 0.875rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      text-decoration: none;
+    }
+
+    .create-btn:hover {
+      background: linear-gradient(
+        135deg,
+        rgba(132, 0, 255, 0.3),
+        rgba(167, 139, 250, 0.3)
+      );
+      border-color: rgba(132, 0, 255, 0.5);
+      transform: translateY(-2px);
+    }
+
+    /* Custom Bento Section */
+    .custom-bento-section {
+      position: relative;
+      width: 100%;
+      user-select: none;
+    }
+
+    .custom-card-grid {
+      display: grid;
+      gap: 1rem;
+      max-width: 1400px;
+      margin: 0 auto 2rem auto;
+      grid-template-columns: repeat(3, 1fr);
+      grid-auto-rows: minmax(200px, auto);
+    }
+
+    /* Custom Bento Card */
+    .custom-bento-card {
+      position: relative;
+      background: var(--background-dark);
+      border: 1px solid var(--border-color);
+      border-radius: 20px;
+      padding: 1.5rem;
+      overflow: hidden;
+      transition: all 0.3s ease;
+      text-decoration: none;
+      color: white;
+      display: flex;
+      flex-direction: column;
+      min-height: 200px;
+
+      --glow-x: 50%;
+      --glow-y: 50%;
+      --glow-intensity: 0;
+      --glow-radius: 200px;
+    }
+
+    .custom-bento-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    }
+
+    .custom-bento-card--large {
+      grid-column: span 3;
+      grid-row: span 3;
+    }
+
+    /* Card Header */
+    .custom-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 1.5rem;
+    }
+
+    .custom-card-label {
+      font-size: 14px;
+      color: rgba(255, 255, 255, 0.5);
+      font-weight: 500;
+      letter-spacing: 0.02em;
+    }
+
+    .custom-card-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+    }
+
+    .custom-card-icon svg {
+      width: 20px;
+      height: 20px;
+      opacity: 0.8;
+    }
+
+    /* Card Content */
+    .custom-card-content {
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+      justify-content: flex-end;
+    }
+
+    .custom-card-title {
+      font-size: 2.5rem;
+      font-weight: 600;
+      margin: 0.75rem 0 0.25rem 0;
+      color: white;
+      letter-spacing: -0.02em;
+    }
+
+    .custom-card-description {
+      font-size: 14px;
+      color: rgba(255, 255, 255, 0.6);
+      margin: 0;
+    }
+
+    /* Border Glow Effect */
+    .custom-bento-card--border-glow::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      padding: 6px;
+      background: radial-gradient(
+        var(--glow-radius) circle at var(--glow-x) var(--glow-y),
+        rgba(132, 0, 255, calc(var(--glow-intensity) * 0.8)) 0%,
+        rgba(132, 0, 255, calc(var(--glow-intensity) * 0.4)) 30%,
+        transparent 60%
+      );
+      border-radius: inherit;
+      -webkit-mask:
+        linear-gradient(#fff 0 0) content-box,
+        linear-gradient(#fff 0 0);
+      -webkit-mask-composite: xor;
+      mask:
+        linear-gradient(#fff 0 0) content-box,
+        linear-gradient(#fff 0 0);
+      mask-composite: exclude;
+      pointer-events: none;
+      opacity: 1;
+      transition: opacity 0.3s ease;
+      z-index: 1;
+    }
+
+    .custom-bento-card--border-glow:hover::after {
+      opacity: 1;
+    }
+
+    .custom-bento-card--border-glow:hover {
+      box-shadow:
+        0 4px 20px rgba(132, 0, 255, 0.2),
+        0 0 30px var(--purple-glow);
+    }
+
+    /* Projects Grid Content */
+    .projects-grid-content {
+      justify-content: flex-start;
+      height: 100%;
+    }
+
+    .projects-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 1rem;
+      margin-top: 1rem;
+      max-height: 600px;
+      overflow-y: auto;
+      padding-right: 0.5rem;
+    }
+
+    .projects-grid::-webkit-scrollbar {
+      width: 4px;
+    }
+
+    .projects-grid::-webkit-scrollbar-track {
+      background: rgba(255, 255, 255, 0.02);
+      border-radius: 2px;
+    }
+
+    .projects-grid::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 2px;
+    }
+
+    /* Project Card */
+    .project-card {
+      position: relative;
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      border-radius: 16px;
+      overflow: hidden;
+      transition: all 0.3s ease;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      height: 400px;
+    }
+
+    .project-card:hover {
+      background: rgba(255, 255, 255, 0.04);
+      border-color: rgba(255, 255, 255, 0.12);
+      transform: translateY(-4px);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    }
+
+    .project-card.draft {
+      opacity: 0.6;
+      border-color: rgba(251, 191, 36, 0.3);
+      background: rgba(251, 191, 36, 0.02);
+    }
+
+    .project-card.draft::before {
+      content: "DRAFT";
+      position: absolute;
+      top: 1rem;
+      right: 1rem;
+      z-index: 10;
+      padding: 0.25rem 0.75rem;
+      background: rgba(251, 191, 36, 0.2);
+      border: 1px solid rgba(251, 191, 36, 0.4);
+      border-radius: 6px;
+      font-size: 0.75rem;
+      color: #fbbf24;
+      font-weight: 600;
+    }
+
+    .project-thumbnail {
+      width: 100%;
+      height: 200px;
+      object-fit: cover;
+      background: rgba(255, 255, 255, 0.02);
+    }
+
+    .project-info {
+      padding: 1.25rem;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .project-title {
+      font-size: 1.125rem;
+      font-weight: 600;
+      color: white;
+      margin-bottom: 0.5rem;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .project-description {
+      font-size: 0.875rem;
+      color: rgba(255, 255, 255, 0.6);
+      line-height: 1.5;
+      margin-bottom: 1rem;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+      flex: 1;
+    }
+
+    .project-meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.75rem;
+      color: rgba(255, 255, 255, 0.4);
+      padding-top: 1rem;
+      border-top: 1px solid rgba(255, 255, 255, 0.06);
+    }
+
+    .project-actions {
+      display: flex;
+      gap: 0.5rem;
+      margin-top: 1rem;
+    }
+
+    .action-btn {
+      flex: 1;
+      padding: 0.5rem;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 6px;
+      color: rgba(255, 255, 255, 0.7);
+      font-size: 0.75rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      text-align: center;
+    }
+
+    .action-btn:hover {
+      background: rgba(255, 255, 255, 0.08);
+      border-color: rgba(255, 255, 255, 0.2);
+      color: white;
+    }
+
+    .action-btn.primary {
+      background: rgba(132, 0, 255, 0.1);
+      border-color: rgba(132, 0, 255, 0.3);
+      color: #8b5cf6;
+    }
+
+    .action-btn.primary:hover {
+      background: rgba(132, 0, 255, 0.15);
+      border-color: rgba(132, 0, 255, 0.5);
+    }
+
+    .action-btn.danger {
+      background: rgba(239, 68, 68, 0.1);
+      border-color: rgba(239, 68, 68, 0.3);
+      color: #ef4444;
+    }
+
+    .action-btn.danger:hover {
+      background: rgba(239, 68, 68, 0.15);
+      border-color: rgba(239, 68, 68, 0.5);
+    }
+
+    /* Empty State */
+    .empty-state {
+      text-align: center;
+      padding: 4rem 2rem;
+    }
+
+    .empty-icon {
+      width: 80px;
+      height: 80px;
+      margin: 0 auto 1.5rem;
+      background: rgba(132, 0, 255, 0.1);
+      border: 1px solid rgba(132, 0, 255, 0.2);
+      border-radius: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .empty-title {
+      font-size: 1.5rem;
+      font-weight: 600;
+      color: white;
+      margin-bottom: 0.5rem;
+    }
+
+    .empty-text {
+      font-size: 0.875rem;
+      color: rgba(255, 255, 255, 0.4);
+    }
+
+    /* MODAL STYLES */
+    .modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.8);
+      backdrop-filter: blur(10px);
+      z-index: 10000;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem;
+      overflow-y: auto;
+    }
+
+    .modal.active {
+      display: flex;
+    }
+
+    .modal-content {
+      background: #0a0a0a;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 16px;
+      max-width: 900px;
+      width: 100%;
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+
+    .modal-content::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    .modal-content::-webkit-scrollbar-track {
+      background: rgba(255, 255, 255, 0.02);
+    }
+
+    .modal-content::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 3px;
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 2rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .modal-title {
+      font-size: 1.5rem;
+      font-weight: 600;
+      color: white;
+    }
+
+    .close-btn {
+      width: 32px;
+      height: 32px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 6px;
+      color: white;
+      font-size: 1.5rem;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      line-height: 1;
+    }
+
+    .close-btn:hover {
+      background: rgba(239, 68, 68, 0.1);
+      border-color: #ef4444;
+    }
+
+    /* FORM STYLES */
+    #projectForm {
+      padding: 2rem;
+    }
+
+    .form-section {
+      margin-bottom: 2rem;
+    }
+
+    .form-section-title {
+      font-size: 1rem;
+      font-weight: 600;
+      color: white;
+      margin-bottom: 1rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .form-row {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 1rem;
+    }
+
+    .form-group {
+      margin-bottom: 1rem;
+    }
+
+    .form-label {
+      display: block;
+      font-size: 0.875rem;
+      font-weight: 500;
+      color: rgba(255, 255, 255, 0.7);
+      margin-bottom: 0.5rem;
+    }
+
+    .form-input,
+    .form-textarea,
+    .form-select {
+      width: 100%;
+      padding: 0.75rem;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 8px;
+      color: white;
+      font-size: 0.875rem;
+      outline: none;
+      transition: all 0.2s ease;
+      font-family: inherit;
+    }
+
+    .form-textarea {
+      min-height: 100px;
+      resize: vertical;
+    }
+
+    .form-input:focus,
+    .form-textarea:focus,
+    .form-select:focus {
+      border-color: rgba(132, 0, 255, 0.5);
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    .form-hint {
+      font-size: 0.75rem;
+      color: rgba(255, 255, 255, 0.4);
+      margin-top: 0.25rem;
+    }
+
+    .form-checkbox {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      cursor: pointer;
+    }
+
+    .form-checkbox input {
+      width: 18px;
+      height: 18px;
+      cursor: pointer;
+    }
+
+    .form-checkbox span {
+      font-size: 0.875rem;
+      color: rgba(255, 255, 255, 0.7);
+    }
+
+    /* SLIDE STYLES */
+    .slide-item {
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      border-radius: 12px;
+      padding: 1.5rem;
+      margin-bottom: 1rem;
+    }
+
+    .slide-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+    }
+
+    .slide-number {
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: #8b5cf6;
+    }
+
+    .slide-remove-btn {
+      width: 24px;
+      height: 24px;
+      background: rgba(239, 68, 68, 0.1);
+      border: 1px solid rgba(239, 68, 68, 0.3);
+      border-radius: 4px;
+      color: #ef4444;
+      font-size: 1.25rem;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      line-height: 1;
+    }
+
+    .slide-remove-btn:hover {
+      background: rgba(239, 68, 68, 0.2);
+      border-color: rgba(239, 68, 68, 0.5);
+    }
+
+    /* FORM ACTIONS */
+    .form-actions {
+      display: flex;
+      gap: 1rem;
+      justify-content: flex-end;
+      padding-top: 2rem;
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .btn {
+      padding: 0.75rem 1.5rem;
+      border-radius: 8px;
+      font-size: 0.875rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      border: 1px solid;
+    }
+
+    .btn-primary {
+      background: linear-gradient(
+        135deg,
+        rgba(132, 0, 255, 0.2),
+        rgba(167, 139, 250, 0.2)
+      );
+      border-color: rgba(132, 0, 255, 0.3);
+      color: #8b5cf6;
+    }
+
+    .btn-primary:hover {
+      background: linear-gradient(
+        135deg,
+        rgba(132, 0, 255, 0.3),
+        rgba(167, 139, 250, 0.3)
+      );
+      border-color: rgba(132, 0, 255, 0.5);
+    }
+
+    .btn-secondary {
+      background: rgba(255, 255, 255, 0.05);
+      border-color: rgba(255, 255, 255, 0.1);
+      color: rgba(255, 255, 255, 0.7);
+    }
+
+    .btn-secondary:hover {
+      background: rgba(255, 255, 255, 0.08);
+      border-color: rgba(255, 255, 255, 0.2);
+      color: white;
+    }
+
+    /* Responsive */
+    @media (max-width: 1024px) {
+      .custom-card-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .custom-bento-card--large {
+        grid-column: span 2;
+      }
+
+      .projects-grid {
+        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+        max-height: 400px;
+      }
+    }
+
+    @media (max-width: 640px) {
+      .panel-section {
+        padding: 5rem 1rem 3rem 1rem;
+      }
+
+      .custom-card-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .custom-bento-card--large {
+        grid-column: span 1;
+        grid-row: span 2;
+      }
+
+      .custom-card-title {
+        font-size: 2rem;
+      }
+
+      .projects-grid {
+        grid-template-columns: 1fr;
+        max-height: 500px;
+      }
+
+      .project-card {
+        height: 350px;
+      }
+
+      .form-row {
+        grid-template-columns: 1fr;
+      }
+
+      .modal {
+        padding: 1rem;
+      }
+
+      .modal-content {
+        max-height: 95vh;
+      }
+    }
+  </style>
+
+  <!-- Particle Background -->
+  <div
+    style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 0;"
+  >
+    <Particles
+      client:load
+      particleColors={["#8b5cf6", "#a78bfa", "#c4b5fd"]}
+      particleCount={100}
+      particleSpread={30}
+      speed={0.04}
+      particleBaseSize={35}
+      moveParticlesOnHover={true}
+      particleHoverFactor={1.08}
+      alphaParticles={true}
+      disableRotation={false}
+      sizeRandomness={1.2}
+    />
+  </div>
+
+  <!-- PillNavbar -->
+  <PillNavbar activePage="projects" />
+  <!-- Main Container -->
+  <main class="panel-container">
+    <section class="panel-section">
+      <div class="section-content">
+        <!-- Header -->
+        <div class="section-header">
+          <div class="header-left">
+            <h1>Projects</h1>
+            <p>Manage your portfolio projects</p>
+          </div>
+          <button class="create-btn" id="newProjectBtn">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <path d="M5 12h14"></path>
+              <path d="M12 5v14"></path>
+            </svg>
+            New Project
+          </button>
+        </div>
+
+        <!-- Custom Bento Grid -->
+        <div class="custom-bento-section">
+          <div class="custom-card-grid">
+            <!-- Total Projects Card -->
+            <div class="custom-bento-card custom-bento-card--border-glow">
+              <div class="custom-card-header">
+                <span class="custom-card-label">TOTAL PROJECTS</span>
+                <div class="custom-card-icon">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="20"
+                    height="20"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="#8b5cf6"
+                    stroke-width="2"
+                  >
+                    <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
+                    <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
+                  </svg>
+                </div>
+              </div>
+              <div class="custom-card-content">
+                <h2 class="custom-card-title">{allProjects.length}</h2>
+                <p class="custom-card-description">All projects</p>
+              </div>
+            </div>
+
+            <!-- Visible Projects Card -->
+            <div class="custom-bento-card custom-bento-card--border-glow">
+              <div class="custom-card-header">
+                <span class="custom-card-label">PUBLISHED</span>
+                <div class="custom-card-icon">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="20"
+                    height="20"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="#8b5cf6"
+                    stroke-width="2"
+                  >
+                    <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"
+                    ></path>
+                    <circle cx="12" cy="12" r="3"></circle>
+                  </svg>
+                </div>
+              </div>
+              <div class="custom-card-content">
+                <h2 class="custom-card-title">{visibleProjects.length}</h2>
+                <p class="custom-card-description">Live on site</p>
+              </div>
+            </div>
+
+            <!-- Draft Projects Card -->
+            <div class="custom-bento-card custom-bento-card--border-glow">
+              <div class="custom-card-header">
+                <span class="custom-card-label">DRAFTS</span>
+                <div class="custom-card-icon">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="20"
+                    height="20"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="#8b5cf6"
+                    stroke-width="2"
+                  >
+                    <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"
+                    ></path>
+                    <path d="m15 5 4 4"></path>
+                  </svg>
+                </div>
+              </div>
+              <div class="custom-card-content">
+                <h2 class="custom-card-title">{draftProjects.length}</h2>
+                <p class="custom-card-description">Hidden</p>
+              </div>
+            </div>
+
+            <!-- Projects List - Large Card -->
+            <div
+              class="custom-bento-card custom-bento-card--large custom-bento-card--border-glow"
+            >
+              <div class="custom-card-header">
+                <span class="custom-card-label">ALL PROJECTS</span>
+                <div class="custom-card-icon">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="20"
+                    height="20"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="#8b5cf6"
+                    stroke-width="2"
+                  >
+                    <rect width="7" height="7" x="3" y="3" rx="1"></rect>
+                    <rect width="7" height="7" x="14" y="3" rx="1"></rect>
+                    <rect width="7" height="7" x="14" y="14" rx="1"></rect>
+                    <rect width="7" height="7" x="3" y="14" rx="1"></rect>
+                  </svg>
+                </div>
+              </div>
+              <div class="custom-card-content projects-grid-content">
+                {
+                  allProjects.length === 0 ? (
+                    <div class="empty-state">
+                      <div class="empty-icon">
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          width="40"
+                          height="40"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="#8b5cf6"
+                          stroke-width="2"
+                        >
+                          <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" />
+                          <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" />
+                        </svg>
+                      </div>
+                      <h3 class="empty-title">No projects yet</h3>
+                      <p class="empty-text">
+                        Click "New Project" to create your first project
+                      </p>
+                    </div>
+                  ) : (
+                    <div class="projects-grid">
+                      {allProjects.map((project) => (
+                        <div
+                          class={`project-card ${!project.visible ? "draft" : ""}`}
+                        >
+                          {project.thumbnail_url && (
+                            <img
+                              src={project.thumbnail_url}
+                              alt={project.title}
+                              class="project-thumbnail"
+                            />
+                          )}
+                          <div class="project-info">
+                            <h3 class="project-title">{project.title}</h3>
+                            <p class="project-description">
+                              {project.description}
+                            </p>
+                            <div class="project-meta">
+                              <span>
+                                {new Date(
+                                  project.created_at,
+                                ).toLocaleDateString("en-US", {
+                                  month: "short",
+                                  day: "numeric",
+                                  year: "numeric",
+                                })}
+                              </span>
+                              <span>
+                                {project.visible ? "👁️ Visible" : "👻 Hidden"}
+                              </span>
+                            </div>
+                            <div class="project-actions">
+                              <button
+                                class="action-btn primary"
+                                data-project-id={project.id}
+                                onclick="editProject(this)"
+                              >
+                                Edit
+                              </button>
+                              <button
+                                class="action-btn"
+                                data-project-id={project.id}
+                                data-visible={project.visible}
+                                onclick="toggleVisibility(this)"
+                              >
+                                {project.visible ? "Hide" : "Show"}
+                              </button>
+                              <button
+                                class="action-btn danger"
+                                data-project-id={project.id}
+                                onclick="deleteProject(this)"
+                              >
+                                Delete
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )
+                }
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- PROJECT MODAL -->
+  <div class="modal" id="projectModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 class="modal-title" id="modalTitle">New Project</h2>
+        <button class="close-btn" onclick="closeModal()">×</button>
+      </div>
+
+      <form id="projectForm">
+        <input type="hidden" id="projectId" />
+
+        <!-- Basic Info -->
+        <div class="form-section">
+          <h3 class="form-section-title">Basic Information</h3>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Project Title *</label>
+              <input type="text" id="title" class="form-input" required />
+            </div>
+            <div class="form-group">
+              <label class="form-label">Category *</label>
+              <select id="category" class="form-select" required>
+                <option value="">Select category</option>
+                <option value="Analytics">Analytics</option>
+                <option value="Web Development">Web Development</option>
+                <option value="Data Science">Data Science</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Description *</label>
+            <textarea id="description" class="form-textarea" required
+            ></textarea>
+          </div>
+          <div class="form-group">
+            <label class="form-checkbox">
+              <input type="checkbox" id="visible" />
+              <span>Publish this project (make it visible on portfolio)</span>
+            </label>
+          </div>
+        </div>
+
+        <!-- Media -->
+        <div class="form-section">
+          <h3 class="form-section-title">Media</h3>
+          <div class="form-group">
+            <label class="form-label">Thumbnail URL (Cloudinary) *</label>
+            <input type="url" id="thumbnail_url" class="form-input" required />
+            <small class="form-hint">Paste your Cloudinary image URL here</small
+            >
+          </div>
+        </div>
+
+        <!-- Tags -->
+        <div class="form-section">
+          <h3 class="form-section-title">Tags</h3>
+          <div class="form-group">
+            <label class="form-label">Main Tags</label>
+            <input
+              type="text"
+              id="main_tags"
+              class="form-input"
+              placeholder="e.g., dashboard, analytics, visualization"
+            />
+            <small class="form-hint">Comma-separated tags</small>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Tool Tags</label>
+            <input
+              type="text"
+              id="tool_tags"
+              class="form-input"
+              placeholder="e.g., React, TypeScript, D3.js"
+            />
+            <small class="form-hint">Comma-separated tools used</small>
+          </div>
+        </div>
+
+        <!-- Resources -->
+        <div class="form-section">
+          <h3 class="form-section-title">Resources</h3>
+          <div class="form-group">
+            <label class="form-label">Resources Link (Google Drive)</label>
+            <input
+              type="url"
+              id="resources_link"
+              class="form-input"
+              placeholder="https://drive.google.com/..."
+            />
+            <small class="form-hint"
+              >Link to project files or documentation</small
+            >
+          </div>
+        </div>
+
+        <!-- Slides -->
+        <div class="form-section">
+          <h3 class="form-section-title">Slides (Project Details)</h3>
+          <p class="form-hint" style="margin-bottom: 1rem;">
+            Add slides to showcase your project in the modal. Each slide has a
+            title, description, and image.
+          </p>
+
+          <div id="slides-container">
+            <!-- Slides will be added here dynamically -->
+          </div>
+
+          <button
+            type="button"
+            class="btn btn-secondary"
+            onclick="addSlide()"
+            style="width: 100%; margin-top: 1rem;"
+          >
+            + Add Slide
+          </button>
+        </div>
+
+        <!-- Form Actions -->
+        <div class="form-actions">
+          <button type="button" class="btn btn-secondary" onclick="closeModal()"
+            >Cancel</button
+          >
+          <button type="submit" class="btn btn-primary">Save Project</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    import { supabase } from "../../lib/supabase";
+
+    let editingProjectId = null;
+    let slidesData = [];
+
+    // Slide management functions
+    window.addSlide = () => {
+      const slideId = Date.now();
+      slidesData.push({
+        id: slideId,
+        title: "",
+        description: "",
+        imageUrl: "",
+      });
+      renderSlides();
+    };
+
+    window.removeSlide = (slideId) => {
+      slidesData = slidesData.filter((s) => s.id !== slideId);
+      renderSlides();
+    };
+
+    function renderSlides() {
+      const container = document.getElementById("slides-container");
+
+      if (slidesData.length === 0) {
+        container.innerHTML =
+          '<p class="form-hint">No slides added yet. Click "Add Slide" to create your first slide.</p>';
+        return;
+      }
+
+      container.innerHTML = slidesData
+        .map(
+          (slide, index) => `
+        <div class="slide-item" data-slide-id="${slide.id}">
+          <div class="slide-header">
+            <span class="slide-number">Slide ${index + 1}</span>
+            <button type="button" class="slide-remove-btn" onclick="removeSlide(${slide.id})">×</button>
+          </div>
+          <div class="slide-fields">
+            <div class="form-group">
+              <label class="form-label">Slide Title</label>
+              <input 
+                type="text" 
+                class="form-input slide-title" 
+                data-slide-id="${slide.id}"
+                value="${slide.title}"
+                placeholder="e.g., Dashboard Overview"
+              />
+            </div>
+            <div class="form-group">
+              <label class="form-label">Slide Description</label>
+              <textarea 
+                class="form-textarea slide-description" 
+                data-slide-id="${slide.id}"
+                placeholder="Brief description of this slide"
+              >${slide.description}</textarea>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Image URL (Cloudinary)</label>
+              <input 
+                type="url" 
+                class="form-input slide-image" 
+                data-slide-id="${slide.id}"
+                value="${slide.imageUrl}"
+                placeholder="https://res.cloudinary.com/..."
+              />
+            </div>
+          </div>
+        </div>
+      `,
+        )
+        .join("");
+
+      // Add event listeners
+      document.querySelectorAll(".slide-title").forEach((input) => {
+        input.addEventListener("input", (e) => {
+          const slideId = parseInt(e.target.getAttribute("data-slide-id"));
+          const slide = slidesData.find((s) => s.id === slideId);
+          if (slide) slide.title = e.target.value;
+        });
+      });
+
+      document.querySelectorAll(".slide-description").forEach((textarea) => {
+        textarea.addEventListener("input", (e) => {
+          const slideId = parseInt(e.target.getAttribute("data-slide-id"));
+          const slide = slidesData.find((s) => s.id === slideId);
+          if (slide) slide.description = e.target.value;
+        });
+      });
+
+      document.querySelectorAll(".slide-image").forEach((input) => {
+        input.addEventListener("input", (e) => {
+          const slideId = parseInt(e.target.getAttribute("data-slide-id"));
+          const slide = slidesData.find((s) => s.id === slideId);
+          if (slide) slide.imageUrl = e.target.value;
+        });
+      });
+    }
+
+    // Open modal for new project
+    document.getElementById("newProjectBtn")?.addEventListener("click", () => {
+      editingProjectId = null;
+      document.getElementById("modalTitle").textContent = "New Project";
+      document.getElementById("projectForm").reset();
+      slidesData = [];
+      renderSlides();
+      document.getElementById("projectModal").classList.add("active");
+    });
+
+    // Close modal
+    window.closeModal = () => {
+      document.getElementById("projectModal").classList.remove("active");
+      editingProjectId = null;
+    };
+
+    // Edit project
+    window.editProject = async (button) => {
+      const projectId = button.getAttribute("data-project-id");
+      editingProjectId = projectId;
+
+      try {
+        const { data: project, error } = await supabase
+          .from("projects")
+          .select("*")
+          .eq("id", projectId)
+          .single();
+
+        if (error) throw error;
+
+        // Fill form
+        document.getElementById("modalTitle").textContent = "Edit Project";
+        document.getElementById("title").value = project.title;
+        document.getElementById("category").value = project.category;
+        document.getElementById("description").value = project.description;
+        document.getElementById("thumbnail_url").value = project.thumbnail_url;
+        document.getElementById("visible").checked = project.visible;
+        document.getElementById("main_tags").value =
+          project.main_tags?.join(", ") || "";
+        document.getElementById("tool_tags").value =
+          project.tool_tags?.join(", ") || "";
+        document.getElementById("resources_link").value =
+          project.resources_link || "";
+
+        // Load slides
+        slidesData = (project.slides || []).map((slide, index) => ({
+          id: Date.now() + index,
+          title: slide.title || "",
+          description: slide.description || "",
+          imageUrl: slide.imageUrl || "",
+        }));
+        renderSlides();
+
+        document.getElementById("projectModal").classList.add("active");
+      } catch (error) {
+        console.error("Error loading project:", error);
+        alert("Failed to load project");
+      }
+    };
+
+    // Toggle visibility
+    window.toggleVisibility = async (button) => {
+      const projectId = button.getAttribute("data-project-id");
+      const currentVisible = button.getAttribute("data-visible") === "true";
+
+      try {
+        const { error } = await supabase
+          .from("projects")
+          .update({ visible: !currentVisible })
+          .eq("id", projectId);
+
+        if (error) throw error;
+        window.location.reload();
+      } catch (error) {
+        console.error("Error toggling visibility:", error);
+        alert("Failed to update visibility");
+      }
+    };
+
+    // Delete project
+    window.deleteProject = async (button) => {
+      const projectId = button.getAttribute("data-project-id");
+
+      if (
+        !confirm(
+          "Are you sure you want to delete this project? This action cannot be undone.",
+        )
+      )
+        return;
+
+      try {
+        const { error } = await supabase
+          .from("projects")
+          .delete()
+          .eq("id", projectId);
+
+        if (error) throw error;
+        window.location.reload();
+      } catch (error) {
+        console.error("Error deleting project:", error);
+        alert("Failed to delete project");
+      }
+    };
+
+    // Form submit
+    document
+      .getElementById("projectForm")
+      ?.addEventListener("submit", async (e) => {
+        e.preventDefault();
+
+        const formData = {
+          title: document.getElementById("title").value,
+          category: document.getElementById("category").value,
+          description: document.getElementById("description").value,
+          thumbnail_url: document.getElementById("thumbnail_url").value,
+          visible: document.getElementById("visible").checked,
+          main_tags: document
+            .getElementById("main_tags")
+            .value.split(",")
+            .map((t) => t.trim())
+            .filter(Boolean),
+          tool_tags: document
+            .getElementById("tool_tags")
+            .value.split(",")
+            .map((t) => t.trim())
+            .filter(Boolean),
+          resources_link:
+            document.getElementById("resources_link").value || null,
+          slides: slidesData.map((slide) => ({
+            title: slide.title,
+            description: slide.description,
+            imageUrl: slide.imageUrl,
+          })),
+        };
+
+        try {
+          if (editingProjectId) {
+            // Update existing
+            const { error } = await supabase
+              .from("projects")
+              .update(formData)
+              .eq("id", editingProjectId);
+
+            if (error) throw error;
+          } else {
+            // Create new
+            const { error } = await supabase
+              .from("projects")
+              .insert([formData]);
+
+            if (error) throw error;
+          }
+
+          window.location.reload();
+        } catch (error) {
+          console.error("Error saving project:", error);
+          alert("Failed to save project. Check console for details.");
+        }
+      });
+
+    // Mouse glow effect
+    document
+      .querySelectorAll(".custom-bento-card--border-glow")
+      .forEach((card) => {
+        const cardElement = card as HTMLElement;
+
+        cardElement.addEventListener("mousemove", (e) => {
+          const rect = cardElement.getBoundingClientRect();
+          const x = ((e.clientX - rect.left) / rect.width) * 100;
+          const y = ((e.clientY - rect.top) / rect.height) * 100;
+
+          cardElement.style.setProperty("--glow-x", `${x}%`);
+          cardElement.style.setProperty("--glow-y", `${y}%`);
+          cardElement.style.setProperty("--glow-intensity", "1");
+        });
+
+        cardElement.addEventListener("mouseleave", () => {
+          cardElement.style.setProperty("--glow-intensity", "0");
+        });
+      });
+
+    // Initialize slides
+    renderSlides();
+  </script>
+</PanelLayout>

@@ -1,0 +1,1031 @@
+---
+// src/pages/panel/analytics.astro
+import PanelLayout from "../../components/panel/Layout/PanelLayout.astro";
+import PillNavbar from "../../components/panel/PillNavbar.astro";
+import Particles from "../../components/welcome/Particles";
+import { supabase } from "../../lib/supabase";
+
+// DEMO MODE - Toggle this to use mock data
+const DEMO_MODE = true; // Set to false when you have real data
+
+// Get time range from query params (default: 7 days)
+const url = new URL(Astro.request.url);
+const timeRange = url.searchParams.get('range') || '7days';
+
+let startDate: Date;
+let endDate = new Date();
+
+// Calculate date range based on filter
+switch (timeRange) {
+  case 'today':
+    startDate = new Date();
+    startDate.setHours(0, 0, 0, 0);
+    break;
+  case '7days':
+    startDate = new Date();
+    startDate.setDate(startDate.getDate() - 7);
+    break;
+  case '30days':
+    startDate = new Date();
+    startDate.setDate(startDate.getDate() - 30);
+    break;
+  case 'custom':
+    const customStart = url.searchParams.get('start');
+    const customEnd = url.searchParams.get('end');
+    startDate = customStart ? new Date(customStart) : new Date(new Date().setDate(new Date().getDate() - 7));
+    endDate = customEnd ? new Date(customEnd) : new Date();
+    break;
+  default:
+    startDate = new Date();
+    startDate.setDate(startDate.getDate() - 7);
+}
+
+const daysDiff = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
+
+let allAnalytics = [];
+let totalViews = 0;
+let uniqueVisitors = 0;
+let topPages: [string, number][] = [];
+let topProjects: [string, { clicks: number; opens: number }][] = [];
+let deviceCounts: Record<string, number> = {};
+let viewsByDay: { date: string; views: number }[] = [];
+
+if (DEMO_MODE) {
+  // MOCK DATA - Scaled by time range
+  const baseMultiplier = timeRange === 'today' ? 0.15 : timeRange === '30days' ? 4 : 1;
+  
+  totalViews = Math.round(1847 * baseMultiplier);
+  uniqueVisitors = Math.round(423 * baseMultiplier);
+  
+  topPages = [
+    ['/project', Math.round(456 * baseMultiplier)],
+    ['/about', Math.round(342 * baseMultiplier)],
+    ['/', Math.round(289 * baseMultiplier)],
+    ['/cv', Math.round(234 * baseMultiplier)],
+    ['/contact', Math.round(189 * baseMultiplier)]
+  ];
+  
+  topProjects = [
+    ['Sales Dashboard Analytics', { clicks: Math.round(89 * baseMultiplier), opens: Math.round(67 * baseMultiplier) }],
+    ['Portfolio Website', { clicks: Math.round(76 * baseMultiplier), opens: Math.round(54 * baseMultiplier) }],
+    ['Customer Segmentation', { clicks: Math.round(62 * baseMultiplier), opens: Math.round(48 * baseMultiplier) }],
+    ['E-commerce Analysis', { clicks: Math.round(51 * baseMultiplier), opens: Math.round(39 * baseMultiplier) }],
+    ['Social Media Dashboard', { clicks: Math.round(43 * baseMultiplier), opens: Math.round(32 * baseMultiplier) }]
+  ];
+  
+  deviceCounts = {
+    desktop: Math.round(1234 * baseMultiplier),
+    mobile: Math.round(478 * baseMultiplier),
+    tablet: Math.round(135 * baseMultiplier)
+  };
+  
+  const numDays = timeRange === 'today' ? 1 : timeRange === '30days' ? 30 : 7;
+  viewsByDay = Array.from({ length: numDays }, (_, i) => {
+    const date = new Date();
+    date.setDate(date.getDate() - (numDays - 1 - i));
+    return {
+      date: date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+      views: Math.round((200 + Math.random() * 150) * baseMultiplier)
+    };
+  });
+  
+} else {
+  // REAL DATA FROM SUPABASE
+  const { data: analytics, error } = await supabase
+    .from('analytics')
+    .select('*')
+    .gte('viewed_at', startDate.toISOString())
+    .lte('viewed_at', endDate.toISOString())
+    .order('viewed_at', { ascending: true });
+
+  allAnalytics = analytics || [];
+  totalViews = allAnalytics.length;
+  uniqueVisitors = new Set(allAnalytics.map(a => a.visitor_id)).size;
+
+  // Top pages
+  const pageCounts = allAnalytics.reduce((acc, curr) => {
+    acc[curr.page_path] = (acc[curr.page_path] || 0) + 1;
+    return acc;
+  }, {} as Record<string, number>);
+  topPages = Object.entries(pageCounts)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 5);
+
+  // Top projects
+  const projectEvents = allAnalytics.filter(a => 
+    a.event_type === 'project_click' || a.event_type === 'project_open'
+  );
+  const projectStats = projectEvents.reduce((acc, curr) => {
+    if (!acc[curr.project_name]) {
+      acc[curr.project_name] = { clicks: 0, opens: 0 };
+    }
+    if (curr.event_type === 'project_click') acc[curr.project_name].clicks++;
+    if (curr.event_type === 'project_open') acc[curr.project_name].opens++;
+    return acc;
+  }, {} as Record<string, { clicks: number; opens: number }>);
+  topProjects = Object.entries(projectStats)
+    .sort((a, b) => (b[1].clicks + b[1].opens) - (a[1].clicks + a[1].opens))
+    .slice(0, 5);
+
+  // Device breakdown
+  deviceCounts = allAnalytics.reduce((acc, curr) => {
+    const device = curr.device_type || 'desktop';
+    acc[device] = (acc[device] || 0) + 1;
+    return acc;
+  }, {} as Record<string, number>);
+
+  // Views by day
+  const viewsByDayMap = new Map<string, number>();
+  for (let i = 0; i < daysDiff; i++) {
+    const date = new Date(startDate);
+    date.setDate(date.getDate() + i);
+    const dateStr = date.toISOString().split('T')[0];
+    viewsByDayMap.set(dateStr, 0);
+    const count = allAnalytics.filter(a => {
+      const aDate = new Date(a.viewed_at).toISOString().split('T')[0];
+      return aDate === dateStr;
+    }).length;
+    viewsByDayMap.set(dateStr, count);
+  }
+  viewsByDay = Array.from(viewsByDayMap.entries()).map(([date, views]) => ({
+    date: new Date(date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+    views
+  }));
+}
+
+const avgViewsPerDay = daysDiff > 0 ? Math.round(totalViews / daysDiff) : 0;
+const maxViews = Math.max(...topPages.map(p => p[1]), 1);
+const maxTotal = Math.max(...topProjects.map(p => p[1].clicks + p[1].opens), 1);
+---
+
+<PanelLayout title="Analytics - MindTree Panel">
+  <style is:global>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html, body {
+      margin: 0 !important;
+      padding: 0 !important;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: #060010;
+      font-family: "Inter", system-ui, -apple-system, sans-serif;
+    }
+
+    :root {
+      --border-color: #392e4e;
+      --background-dark: #060010;
+      --orange-primary: rgba(251, 146, 60, 1);
+      --orange-glow: rgba(251, 146, 60, 0.2);
+    }
+
+    /* Scroll Indicators */
+    .scroll-indicators {
+      position: fixed;
+      right: 2rem;
+      top: 50%;
+      transform: translateY(-50%);
+      z-index: 999;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .scroll-indicator {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      padding: 0.5rem;
+      border-radius: 8px;
+      text-decoration: none;
+    }
+
+    .scroll-indicator:hover {
+      background: rgba(255, 255, 255, 0.02);
+    }
+
+    .scroll-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.3);
+      transition: all 0.3s ease;
+    }
+
+    .scroll-indicator.active .scroll-dot {
+      background: white;
+      width: 8px;
+      height: 8px;
+      box-shadow: 0 0 12px rgba(255, 255, 255, 0.3);
+    }
+
+    .scroll-label {
+      font-size: 0.75rem;
+      color: rgba(255, 255, 255, 0.5);
+      font-weight: 500;
+      opacity: 0;
+      transition: all 0.3s ease;
+      white-space: nowrap;
+    }
+
+    .scroll-indicator:hover .scroll-label,
+    .scroll-indicator.active .scroll-label {
+      opacity: 1;
+    }
+
+    /* Demo Badge */
+    .demo-badge {
+      position: fixed;
+      top: 1.5rem;
+      left: 2rem;
+      z-index: 1000;
+      padding: 0.5rem 1rem;
+      background: rgba(251, 146, 60, 0.1);
+      border: 1px solid rgba(251, 146, 60, 0.3);
+      border-radius: 8px;
+      color: #fb923c;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+
+    /* Main Container */
+    .panel-container {
+      width: 100%;
+      height: 100vh;
+      overflow-y: auto;
+      scroll-behavior: smooth;
+    }
+
+    .panel-container::-webkit-scrollbar {
+      width: 4px;
+    }
+
+    .panel-container::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    .panel-container::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 2px;
+    }
+
+    /* Panel Section */
+    .panel-section {
+      position: relative;
+      width: 100%;
+      min-height: 100vh;
+      padding: 6rem 2rem 4rem 2rem;
+    }
+
+    .section-content {
+      max-width: 1400px;
+      margin: 0 auto;
+      z-index: 10;
+    }
+
+    /* Header */
+    .section-header {
+      margin-bottom: 2rem;
+    }
+
+    .section-title {
+      font-size: 2rem;
+      font-weight: 600;
+      color: white;
+      margin-bottom: 0.5rem;
+      letter-spacing: -0.02em;
+    }
+
+    .section-subtitle {
+      font-size: 0.875rem;
+      color: rgba(255, 255, 255, 0.4);
+    }
+
+    /* Time Filter */
+    .time-filter-container {
+      margin-bottom: 2rem;
+    }
+
+    .time-filter {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+
+    .filter-btn {
+      padding: 0.625rem 1.25rem;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      border-radius: 8px;
+      color: rgba(255, 255, 255, 0.6);
+      font-size: 0.875rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      text-decoration: none;
+    }
+
+    .filter-btn:hover {
+      background: rgba(255, 255, 255, 0.05);
+      border-color: rgba(255, 255, 255, 0.1);
+      color: white;
+    }
+
+    .filter-btn.active {
+      background: rgba(251, 146, 60, 0.1);
+      border-color: rgba(251, 146, 60, 0.3);
+      color: #fb923c;
+    }
+
+    /* Custom Date Picker */
+    .custom-date-picker {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      margin-top: 1rem;
+      padding: 1rem;
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      border-radius: 8px;
+    }
+
+    .custom-date-picker input[type="date"] {
+      padding: 0.5rem;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 6px;
+      color: white;
+      font-size: 0.875rem;
+    }
+
+    .custom-date-picker button {
+      padding: 0.5rem 1rem;
+      background: rgba(251, 146, 60, 0.1);
+      border: 1px solid rgba(251, 146, 60, 0.3);
+      border-radius: 6px;
+      color: #fb923c;
+      font-size: 0.875rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .custom-date-picker button:hover {
+      background: rgba(251, 146, 60, 0.15);
+      border-color: rgba(251, 146, 60, 0.5);
+    }
+
+    /* Bento Grid */
+    .custom-card-grid {
+      display: grid;
+      gap: 1rem;
+      grid-template-columns: repeat(4, 1fr);
+      grid-auto-rows: minmax(200px, auto);
+    }
+
+    /* Bento Card */
+    .custom-bento-card {
+      position: relative;
+      background: var(--background-dark);
+      border: 1px solid var(--border-color);
+      border-radius: 20px;
+      padding: 1.5rem;
+      overflow: hidden;
+      transition: all 0.3s ease;
+      color: white;
+      display: flex;
+      flex-direction: column;
+      min-height: 200px;
+
+      --glow-x: 50%;
+      --glow-y: 50%;
+      --glow-intensity: 0;
+      --glow-radius: 200px;
+    }
+
+    .custom-bento-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    }
+
+    .custom-bento-card--wide {
+      grid-column: span 2;
+    }
+
+    .custom-bento-card--tall {
+      grid-row: span 2;
+    }
+
+    .custom-bento-card--large {
+      grid-column: span 4;
+      grid-row: span 2;
+    }
+
+    /* Card Header */
+    .custom-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 1.5rem;
+    }
+
+    .custom-card-label {
+      font-size: 14px;
+      color: rgba(255, 255, 255, 0.5);
+      font-weight: 500;
+      letter-spacing: 0.02em;
+      text-transform: uppercase;
+    }
+
+    .custom-card-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+    }
+
+    .custom-card-icon svg {
+      width: 20px;
+      height: 20px;
+      opacity: 0.8;
+    }
+
+    /* Card Content */
+    .custom-card-content {
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+      justify-content: flex-end;
+    }
+
+    .custom-card-title {
+      font-size: 2.5rem;
+      font-weight: 600;
+      margin: 0.75rem 0 0.25rem 0;
+      color: white;
+      letter-spacing: -0.02em;
+    }
+
+    .custom-card-description {
+      font-size: 14px;
+      color: rgba(255, 255, 255, 0.6);
+      margin: 0;
+    }
+
+    /* Border Glow Effect */
+    .custom-bento-card--border-glow::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      padding: 6px;
+      background: radial-gradient(
+        var(--glow-radius) circle at var(--glow-x) var(--glow-y),
+        rgba(251, 146, 60, calc(var(--glow-intensity) * 0.8)) 0%,
+        rgba(251, 146, 60, calc(var(--glow-intensity) * 0.4)) 30%,
+        transparent 60%
+      );
+      border-radius: inherit;
+      -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+      -webkit-mask-composite: xor;
+      mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+      mask-composite: exclude;
+      pointer-events: none;
+      opacity: 1;
+      transition: opacity 0.3s ease;
+      z-index: 1;
+    }
+
+    .custom-bento-card--border-glow:hover::after {
+      opacity: 1;
+    }
+
+    .custom-bento-card--border-glow:hover {
+      box-shadow: 0 4px 20px rgba(251, 146, 60, 0.2), 0 0 30px var(--orange-glow);
+    }
+
+    /* Chart Content */
+    .chart-content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-start;
+    }
+
+    .chart-title {
+      font-size: 0.875rem;
+      font-weight: 500;
+      color: rgba(255, 255, 255, 0.7);
+      margin-bottom: 1rem;
+    }
+
+    /* Views Over Time Chart */
+    .views-chart {
+      display: flex;
+      align-items: flex-end;
+      gap: 4px;
+      height: 120px;
+      margin-top: auto;
+    }
+
+    .chart-bar {
+      flex: 1;
+      background: #0c0588;
+      border-radius: 4px 4px 0 0;
+      transition: all 0.2s ease;
+      position: relative;
+      min-height: 4px;
+    }
+
+    .chart-bar:hover {
+      background: rgba(251, 146, 60, 0.5);
+    }
+
+    .chart-bar-label {
+      position: absolute;
+      bottom: -1.5rem;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 0.625rem;
+      color: rgba(255, 255, 255, 0.4);
+      white-space: nowrap;
+    }
+
+    /* Device Breakdown */
+    .device-stats {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .device-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .device-name {
+      font-size: 0.875rem;
+      color: rgba(255, 255, 255, 0.7);
+      text-transform: capitalize;
+    }
+
+    .device-count {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .device-percentage {
+      font-size: 0.875rem;
+      color: #fb923c;
+      font-weight: 600;
+    }
+
+    .device-number {
+      font-size: 0.75rem;
+      color: rgba(255, 255, 255, 0.4);
+    }
+
+    /* Top Pages/Projects */
+    .top-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+      max-height: 300px;
+      overflow-y: auto;
+      padding-right: 0.5rem;
+    }
+
+    .top-list::-webkit-scrollbar {
+      width: 4px;
+    }
+
+    .top-list::-webkit-scrollbar-track {
+      background: rgba(255, 255, 255, 0.02);
+    }
+
+    .top-list::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 2px;
+    }
+
+    .top-item {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .top-item-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .top-item-name {
+      font-size: 0.875rem;
+      color: rgba(255, 255, 255, 0.7);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .top-item-value {
+      font-size: 0.875rem;
+      color: #fb923c;
+      font-weight: 600;
+    }
+
+    .top-item-bar {
+      height: 6px;
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 3px;
+      overflow: hidden;
+    }
+
+    .top-item-bar-fill {
+      height: 100%;
+      background: #8a8a94;
+      border-radius: 3px;
+      transition: width 0.3s ease;
+    }
+
+    /* Project Stats */
+    .project-stats {
+      display: flex;
+      gap: 0.5rem;
+      font-size: 0.75rem;
+      color: rgba(255, 255, 255, 0.4);
+    }
+
+    /* Empty State */
+    .empty-state {
+      text-align: center;
+      padding: 4rem 2rem;
+    }
+
+    .empty-icon {
+      width: 80px;
+      height: 80px;
+      margin: 0 auto 1.5rem;
+      background: rgba(251, 146, 60, 0.1);
+      border: 1px solid rgba(251, 146, 60, 0.2);
+      border-radius: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .empty-title {
+      font-size: 1.5rem;
+      font-weight: 600;
+      color: white;
+      margin-bottom: 0.5rem;
+    }
+
+    .empty-text {
+      font-size: 0.875rem;
+      color: rgba(255, 255, 255, 0.4);
+    }
+
+    /* Responsive */
+    @media (max-width: 1024px) {
+      .custom-card-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .custom-bento-card--wide,
+      .custom-bento-card--large {
+        grid-column: span 2;
+      }
+    }
+
+    @media (max-width: 640px) {
+      .panel-section {
+        padding: 5rem 1rem 3rem 1rem;
+      }
+
+      .custom-card-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .custom-bento-card--wide,
+      .custom-bento-card--large,
+      .custom-bento-card--tall {
+        grid-column: span 1;
+        grid-row: span 1;
+      }
+
+      .custom-card-title {
+        font-size: 2rem;
+      }
+
+      .time-filter {
+        flex-direction: column;
+      }
+
+      .filter-btn {
+        width: 100%;
+      }
+    }
+  </style>
+
+  <!-- Particle Background -->
+  <div style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 0;">
+    <Particles 
+      client:load
+      particleColors={['#fb923c', '#f59e0b', '#fbbf24']}
+      particleCount={80}
+      particleSpread={30}
+      speed={0.03}
+      particleBaseSize={30}
+      moveParticlesOnHover={true}
+      particleHoverFactor={1.05}
+      alphaParticles={true}
+      disableRotation={false}
+      sizeRandomness={1.3}
+    />
+  </div>
+
+  <!-- Demo Mode Badge -->
+  {DEMO_MODE && (
+    <div class="demo-badge">
+      🎨 Demo Mode
+    </div>
+  )}
+
+  <!-- PillNavbar -->
+  <PillNavbar activePage="analytics" />
+  
+  <!-- Main Container -->
+  <main class="panel-container">
+    <section class="panel-section">
+      <div class="section-content">
+        
+        <!-- Header -->
+        <div class="section-header">
+          <h1 class="section-title">Analytics</h1>
+          <p class="section-subtitle">Track your portfolio performance</p>
+        </div>
+
+        <!-- Time Filter -->
+        <div class="time-filter-container">
+          <div class="time-filter">
+            <a href="?range=today" class={`filter-btn ${timeRange === 'today' ? 'active' : ''}`}>Today</a>
+            <a href="?range=7days" class={`filter-btn ${timeRange === '7days' ? 'active' : ''}`}>7 Days</a>
+            <a href="?range=30days" class={`filter-btn ${timeRange === '30days' ? 'active' : ''}`}>30 Days</a>
+            <button class="filter-btn" id="customRangeBtn">Custom</button>
+          </div>
+
+          <div class="custom-date-picker" id="customDatePicker" style="display: none;">
+            <input type="date" id="startDate" />
+            <span style="color: rgba(255, 255, 255, 0.5);">to</span>
+            <input type="date" id="endDate" />
+            <button id="applyCustomRange">Apply</button>
+          </div>
+        </div>
+
+        {totalViews === 0 ? (
+          <div class="empty-state">
+            <div class="empty-icon">
+              <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#fb923c" stroke-width="2">
+                <line x1="12" x2="12" y1="20" y2="10"/>
+                <line x1="18" x2="18" y1="20" y2="4"/>
+                <line x1="6" x2="6" y1="20" y2="16"/>
+              </svg>
+            </div>
+            <h3 class="empty-title">No data yet</h3>
+            <p class="empty-text">Analytics will appear once visitors start viewing your portfolio</p>
+          </div>
+        ) : (
+          <div class="custom-card-grid">
+            
+            <!-- Total Views -->
+            <div class="custom-bento-card custom-bento-card--border-glow">
+              <div class="custom-card-header">
+                <span class="custom-card-label">Total Views</span>
+                <div class="custom-card-icon">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fb923c" stroke-width="2">
+                    <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/>
+                    <circle cx="12" cy="12" r="3"/>
+                  </svg>
+                </div>
+              </div>
+              <div class="custom-card-content">
+                <h2 class="custom-card-title">{totalViews.toLocaleString()}</h2>
+                <p class="custom-card-description">Page views</p>
+              </div>
+            </div>
+
+            <!-- Unique Visitors -->
+            <div class="custom-bento-card custom-bento-card--border-glow">
+              <div class="custom-card-header">
+                <span class="custom-card-label">Unique Visitors</span>
+                <div class="custom-card-icon">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fb923c" stroke-width="2">
+                    <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
+                    <circle cx="9" cy="7" r="4"/>
+                    <path d="M22 21v-2a4 4 0 0 0-3-3.87"/>
+                    <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                  </svg>
+                </div>
+              </div>
+              <div class="custom-card-content">
+                <h2 class="custom-card-title">{uniqueVisitors.toLocaleString()}</h2>
+                <p class="custom-card-description">Visitors</p>
+              </div>
+            </div>
+
+            <!-- Avg Views/Day -->
+            <div class="custom-bento-card custom-bento-card--border-glow">
+              <div class="custom-card-header">
+                <span class="custom-card-label">Avg Views/Day</span>
+                <div class="custom-card-icon">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fb923c" stroke-width="2">
+                    <line x1="12" x2="12" y1="2" y2="22"/>
+                    <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+                  </svg>
+                </div>
+              </div>
+              <div class="custom-card-content">
+                <h2 class="custom-card-title">{avgViewsPerDay}</h2>
+                <p class="custom-card-description">Daily average</p>
+              </div>
+            </div>
+
+            <!-- Device Breakdown -->
+            <div class="custom-bento-card custom-bento-card--border-glow">
+              <div class="custom-card-header">
+                <span class="custom-card-label">Device Breakdown</span>
+                <div class="custom-card-icon">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fb923c" stroke-width="2">
+                    <rect width="14" height="20" x="5" y="2" rx="2" ry="2"/>
+                    <path d="M12 18h.01"/>
+                  </svg>
+                </div>
+              </div>
+              <div class="custom-card-content chart-content">
+                <div class="device-stats">
+                  {Object.entries(deviceCounts).map(([device, count]) => {
+                    const percentage = ((count / totalViews) * 100).toFixed(1);
+                    return (
+                      <div class="device-item">
+                        <span class="device-name">{device}</span>
+                        <div class="device-count">
+                          <span class="device-percentage">{percentage}%</span>
+                          <span class="device-number">({count})</span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+
+            <!-- Views Over Time -->
+            <div class="custom-bento-card custom-bento-card--wide custom-bento-card--border-glow">
+              <div class="custom-card-header">
+                <span class="custom-card-label">Views Over Time</span>
+                <div class="custom-card-icon">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fb923c" stroke-width="2">
+                    <path d="M3 3v18h18"/>
+                    <path d="m19 9-5 5-4-4-3 3"/>
+                  </svg>
+                </div>
+              </div>
+              <div class="custom-card-content chart-content">
+                <div class="views-chart">
+                  {viewsByDay.map((day) => {
+                    const maxViews = Math.max(...viewsByDay.map(d => d.views));
+                    const height = maxViews > 0 ? (day.views / maxViews) * 100 : 0;
+                    return (
+                      <div class="chart-bar" style={`height: ${height}%`}>
+                        <span class="chart-bar-label">{day.date}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+
+            <!-- Top Pages -->
+            <div class="custom-bento-card custom-bento-card--wide custom-bento-card--border-glow">
+              <div class="custom-card-header">
+                <span class="custom-card-label">Top Pages</span>
+                <div class="custom-card-icon">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fb923c" stroke-width="2">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                    <polyline points="14 2 14 8 20 8"/>
+                  </svg>
+                </div>
+              </div>
+              <div class="custom-card-content chart-content">
+                <div class="top-list">
+                  {topPages.map(([page, views]) => {
+                    const width = (views / maxViews) * 100;
+                    return (
+                      <div class="top-item">
+                        <div class="top-item-header">
+                          <span class="top-item-name">{page}</span>
+                          <span class="top-item-value">{views}</span>
+                        </div>
+                        <div class="top-item-bar">
+                          <div class="top-item-bar-fill" style={`width: ${width}%`}></div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+
+            <!-- Top Projects -->
+            <div class="custom-bento-card custom-bento-card--large custom-bento-card--border-glow">
+              <div class="custom-card-header">
+                <span class="custom-card-label">Top Projects</span>
+                <div class="custom-card-icon">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fb923c" stroke-width="2">
+                    <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/>
+                    <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
+                  </svg>
+                </div>
+              </div>
+              <div class="custom-card-content chart-content">
+                <div class="top-list">
+                  {topProjects.map(([name, stats]) => {
+                    const total = stats.clicks + stats.opens;
+                    const width = (total / maxTotal) * 100;
+                    return (
+                      <div class="top-item">
+                        <div class="top-item-header">
+                          <span class="top-item-name">{name}</span>
+                          <span class="top-item-value">{total}</span>
+                        </div>
+                        <div class="project-stats">
+                          <span>👆 {stats.clicks} clicks</span>
+                          <span>👁️ {stats.opens} opens</span>
+                        </div>
+                        <div class="top-item-bar">
+                          <div class="top-item-bar-fill" style={`width: ${width}%`}></div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+
+          </div>
+        )}
+      </div>
+    </section>
+  </main>
+
+  <script>
+    // Custom date picker toggle
+    const customRangeBtn = document.getElementById('customRangeBtn');
+    const customDatePicker = document.getElementById('customDatePicker');
+    const applyCustomRange = document.getElementById('applyCustomRange');
+
+    customRangeBtn?.addEventListener('click', () => {
+      customDatePicker.style.display = customDatePicker.style.display === 'none' ? 'flex' : 'none';
+    });
+
+    applyCustomRange?.addEventListener('click', () => {
+      const startDate = (document.getElementById('startDate') as HTMLInputElement)?.value;
+      const endDate = (document.getElementById('endDate') as HTMLInputElement)?.value;
+      
+      if (startDate && endDate) {
+        window.location.href = `?range=custom&start=${startDate}&end=${endDate}`;
+      }
+    });
+
+    // Mouse glow effect
+    document.querySelectorAll('.custom-bento-card--border-glow').forEach((card) => {
+      const cardElement = card as HTMLElement;
+
+      cardElement.addEventListener('mousemove', (e) => {
+        const rect = cardElement.getBoundingClientRect();
+        const x = ((e.clientX - rect.left) / rect.width) * 100;
+        const y = ((e.clientY - rect.top) / rect.height) * 100;
+
+        cardElement.style.setProperty('--glow-x', `${x}%`);
+        cardElement.style.setProperty('--glow-y', `${y}%`);
+        cardElement.style.setProperty('--glow-intensity', '1');
+      });
+
+      cardElement.addEventListener('mouseleave', () => {
+        cardElement.style.setProperty('--glow-intensity', '0');
+      });
+    });
+  </script>
+</PanelLayout>

@@ -1,0 +1,641 @@
+---
+import Particles from "../components/welcome/Particles";
+---
+
+<!doctype html>
+<html lang="en" style="margin: 0; padding: 0; height: 100%; overflow: hidden;">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>About - Chinmay Patil</title>
+    <style is:global>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        margin: 0 !important;
+        padding: 0 !important;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        background: #0a0a0a;
+        font-family:
+          system-ui,
+          -apple-system,
+          sans-serif;
+      }
+
+      /* Floating Navigation */
+      .floating-nav {
+        position: fixed;
+        top: 0.2rem;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 1000;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.35rem 0.5rem;
+        background: rgba(0, 0, 0, 0);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 2rem;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+        transition: all 0.3s ease;
+      }
+
+      .floating-nav.elevated {
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7);
+      }
+
+      .floating-nav.hidden {
+        opacity: 0;
+        transform: translateX(-50%) translateY(-100px);
+      }
+
+      .nav-link {
+        color: rgba(255, 255, 255, 0.8);
+        text-decoration: none;
+        padding: 0.5rem 1rem;
+        border-radius: 1.5rem;
+        transition: all 0.2s ease;
+        font-size: 0.875rem;
+        font-weight: 500;
+      }
+
+      .nav-link:hover {
+        background: rgba(255, 255, 255, 0.1);
+        color: white;
+      }
+
+      .nav-link.resume {
+        border: 1px solid rgba(0, 255, 255, 0.4);
+        background: rgba(0, 255, 255, 0.1);
+        color: rgba(255, 255, 255, 0.9);
+      }
+
+      .nav-link.resume:hover {
+        background: rgba(0, 255, 255, 0.2);
+      }
+
+      /* Scroll Indicator Dots */
+      .scroll-indicators {
+        position: fixed;
+        right: 1rem;
+        top: 50%;
+        transform: translateY(-50%);
+        z-index: 999;
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+        padding: 0.5rem;
+      }
+
+      .scroll-dot {
+        width: 0.75rem;
+        height: 0.75rem;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.4);
+        cursor: pointer;
+        transition: all 0.3s ease;
+        border: none;
+        padding: 0;
+      }
+
+      .scroll-dot:hover {
+        background: rgba(255, 255, 255, 0.7);
+      }
+
+      .scroll-dot.active {
+        background: white;
+        transform: scale(1.25);
+        box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+      }
+
+      /* Main Container - FIXED: Removed snap scroll */
+      .about-container {
+        width: 100%;
+        height: 100vh;
+        overflow-y: scroll;
+        scroll-behavior: smooth;
+      }
+
+      /* Section Styles */
+      .about-section {
+        position: relative;
+        width: 100%;
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 4rem 1rem;
+      }
+
+      .section-content {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 2rem;
+        max-width: 1400px;
+        width: 100%;
+        z-index: 10;
+      }
+
+      /* Tablet and up: Two columns */
+      @media (min-width: 768px) {
+        .section-content {
+          gap: 2.5rem;
+        }
+      }
+
+      @media (min-width: 1024px) {
+        .section-content {
+          flex-direction: row;
+          gap: 3rem;
+        }
+
+        .section-content.reverse {
+          flex-direction: row-reverse;
+        }
+      }
+
+      @media (min-width: 1280px) {
+        .section-content {
+          gap: 4rem;
+        }
+      }
+
+      /* Text Column */
+      .text-column {
+        flex: 1 1 100%;
+        max-width: 100%;
+        text-align: center;
+      }
+
+      @media (min-width: 768px) {
+        .text-column {
+          max-width: 600px;
+        }
+      }
+
+      @media (min-width: 1024px) {
+        .text-column {
+          text-align: left;
+          flex: 1 1 50%;
+        }
+      }
+
+      .section-title {
+        font-size: 2.5rem;
+        font-weight: 700;
+        color: white;
+        margin-bottom: 1.5rem;
+        line-height: 1.2;
+      }
+
+      @media (min-width: 768px) {
+        .section-title {
+          font-size: 3rem;
+        }
+      }
+
+      .section-description {
+        font-size: 1rem;
+        line-height: 1.8;
+        color: rgba(255, 255, 255, 0.8);
+      }
+
+      @media (min-width: 768px) {
+        .section-description {
+          font-size: 1.125rem;
+        }
+      }
+
+      /* Image Column */
+      .image-column {
+        flex: 1 1 100%;
+        max-width: 100%;
+        width: 100%;
+        height: 280px;
+        position: relative;
+      }
+
+      @media (min-width: 480px) {
+        .image-column {
+          height: 320px;
+          max-width: 500px;
+        }
+      }
+
+      @media (min-width: 768px) {
+        .image-column {
+          height: 380px;
+        }
+      }
+
+      @media (min-width: 1024px) {
+        .image-column {
+          flex: 1 1 45%;
+          height: 400px;
+        }
+      }
+
+      @media (min-width: 1280px) {
+        .image-column {
+          height: 450px;
+        }
+      }
+
+      .image-wrapper {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        border-radius: 0.75rem;
+        overflow: hidden;
+        transition: all 0.3s ease;
+      }
+
+      .image-wrapper:hover {
+        transform: scale(1.02);
+      }
+
+      .image-wrapper img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+
+      .image-overlay {
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(to top, rgba(0, 0, 0, 0.3), transparent);
+        pointer-events: none;
+      }
+
+      /* Neon borders for images */
+      .neon-border-cyan {
+        border: 2px solid #1a8fb6;
+        box-shadow: 0 0 20px rgba(26, 143, 182, 0.4);
+      }
+
+      .neon-border-magenta {
+        border: 2px solid #ff00ff;
+        box-shadow: 0 0 20px rgba(255, 0, 255, 0.4);
+      }
+
+      .neon-border-yellow {
+        border: 2px solid #ffff00;
+        box-shadow: 0 0 20px rgba(255, 255, 0, 0.4);
+      }
+
+      .neon-border-green {
+        border: 2px solid #00ff00;
+        box-shadow: 0 0 20px rgba(0, 255, 0, 0.4);
+      }
+
+      /* Gradient Backgrounds */
+      .bg-gradient-1 {
+        background: linear-gradient(to bottom right, #160a1d, #2b143a);
+      }
+
+      .bg-gradient-2 {
+        background: linear-gradient(to bottom right, #1a1a2e, #16213e);
+      }
+
+      .bg-gradient-3 {
+        background: linear-gradient(to bottom right, #0f0f23, #1a1a3e);
+      }
+
+      .bg-gradient-4 {
+        background: linear-gradient(to bottom right, #1e1e2e, #2d2d44);
+      }
+
+      .bg-gradient-5 {
+        background: linear-gradient(to bottom right, #0a0a0a, #1f1f1f);
+      }
+
+      /* Mobile adjustments */
+      @media (max-width: 767px) {
+        .about-section {
+          padding: 3rem 1rem;
+        }
+
+        .floating-nav {
+          padding: 0.5rem 1rem;
+          gap: 0.25rem;
+        }
+
+        .nav-link {
+          font-size: 0.75rem;
+          padding: 0.4rem 0.8rem;
+        }
+
+        .scroll-indicators {
+          right: 0.5rem;
+          gap: 0.5rem;
+        }
+
+        .scroll-dot {
+          width: 0.6rem;
+          height: 0.6rem;
+        }
+      }
+
+      @media (min-width: 768px) and (max-width: 1023px) {
+        .about-section {
+          padding: 3rem 2rem;
+        }
+      }
+
+      /* Animation classes */
+      .fade-in {
+        animation: fadeIn 0.6s ease-out forwards;
+      }
+
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(20px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      /* Hide scrollbar but keep functionality */
+      .about-container::-webkit-scrollbar {
+        display: none;
+      }
+
+      .about-container {
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Particle Background -->
+    <div
+      style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 0;"
+    >
+      <Particles
+        client:load
+        particleColors={["#1a8fb6", "#0df4f4", "#ff00ff"]}
+        particleCount={200}
+        particleSpread={20}
+        speed={0.1}
+        particleBaseSize={60}
+        moveParticlesOnHover={true}
+        particleHoverFactor={1.3}
+        alphaParticles={true}
+        disableRotation={false}
+        sizeRandomness={1.5}
+      />
+    </div>
+
+    <!-- Floating Navigation -->
+    <nav id="floating-nav" class="floating-nav">
+      <a
+        href="/"
+        class="nav-link"
+        onclick="sessionStorage.setItem('skipIntro', 'true')">Home</a
+      >
+      <a href="/projects" class="nav-link">Projects</a>
+      <a href="/contact" class="nav-link">Contact</a>
+      <a href="/cv" class="nav-link resume">Resume</a>
+    </nav>
+
+    <!-- Scroll Indicators -->
+    <div class="scroll-indicators">
+      <button class="scroll-dot active" data-section="0" aria-label="Section 1"
+      ></button>
+      <button class="scroll-dot" data-section="1" aria-label="Section 2"
+      ></button>
+      <button class="scroll-dot" data-section="2" aria-label="Section 3"
+      ></button>
+      <button class="scroll-dot" data-section="3" aria-label="Section 4"
+      ></button>
+      <button class="scroll-dot" data-section="4" aria-label="Section 5"
+      ></button>
+    </div>
+
+    <!-- Main Content -->
+    <main id="about-container" class="about-container">
+      <!-- Section 1: Who Am I? -->
+      <section class="about-section bg-gradient-1">
+        <div class="section-content">
+          <div class="text-column fade-in">
+            <h2 class="section-title" style="color: #1a8fb6;">Who Am I?</h2>
+            <div class="section-description">
+              I am <b>Chinmay Patil</b>, born in <b>India</b>, BSC IT graduate
+              batch - <b>2018</b>, and I began my professional experience in the
+              same year. Like everyone else, I had no idea how things worked in
+              a professional atmosphere.
+              <br /><br />
+              Since then, I've had numerous opportunities to learn and explore new
+              things while working with some of the industry's greatest start-ups
+              and mentors.
+              <br /><br />
+              Scroll down ↓ to learn more about me.
+            </div>
+          </div>
+          <div class="image-column fade-in">
+            <div class="image-wrapper neon-border-cyan">
+              <img src="/images/profile.JPG" alt="Chinmay Patil" />
+              <div class="image-overlay"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Section 2: The Master's -->
+      <section class="about-section bg-gradient-2">
+        <div class="section-content reverse">
+          <div class="text-column fade-in">
+            <h2 class="section-title" style="color: #0df4f4;">The Master's</h2>
+            <div class="section-description">
+              Moving to Ireland to pursue my MSc in Business Analytics was a
+              turning point – it reshaped how I think about data, teamwork, and
+              impact.
+              <br /><br />
+              At Maynooth University, I worked on multiple client projects like <b
+                >Age Friendly Ireland (AFI) and Res4City</b
+              >, applying analytics to real-world sustainability and policy
+              challenges.
+              <br /><br />
+              These experiences deepened my understanding of AI, machine learning,
+              and BI tools like Tableau, RapidMiner, and Python – and taught me how
+              to make insights readable to produce profitable outputs.
+            </div>
+          </div>
+          <div class="image-column fade-in">
+            <div class="image-wrapper neon-border-cyan">
+              <img src="/images/Masters_1.png" alt="Master's at Maynooth" />
+              <div class="image-overlay"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Section 4: The Journey So Far -->
+      <section class="about-section bg-gradient-4">
+        <div class="section-content reverse">
+          <div class="text-column fade-in">
+            <h2 class="section-title" style="color: #ffff00;">
+              The Journey So Far
+            </h2>
+            <div class="section-description">
+              Before my master's, I spent 6+ years in the e-commerce and FMCG
+              space – helping brands grow, optimise, and perform better.
+              <br /><br />
+              • <b>Purplle.com</b> → Here I learned the difference between good planning
+              and recovering from bad planning.
+              <br />
+              • <b>Dunzo</b> → In retail you always need to find the way out, there
+              is practically no space for excuses here.
+              <br />
+              • <b>Zomato</b> → Just blessed to know how a single 'Order Now' button
+              makes the journey till 'Delivered On-time'.
+              <br /><br />
+              These experiences taught me speed, structure, and stakeholder empathy
+              – lessons that I now combine with analytics to create value at scale.
+            </div>
+          </div>
+          <div class="image-column fade-in">
+            <div class="image-wrapper neon-border-yellow">
+              <img src="/images/climb.jpg" alt="Career journey" />
+              <div class="image-overlay"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Section 3: Life -->
+      <section class="about-section bg-gradient-3">
+        <div class="section-content">
+          <div class="text-column fade-in">
+            <h2 class="section-title" style="color: #ff00ff;">Life</h2>
+            <div class="section-description">
+              I'm someone who enjoys building, learning, and reflecting. My
+              happy space usually involves coffee, some code, and a playlist of
+              calm beats.
+              <br /><br />
+              Outside work, I explore mythology, photography, and the art of storytelling
+              – whether it's through words, visuals, or analytics.
+              <br /><br />
+              <b
+                >'It's always about the perspective'. This is what I believe and
+                it helps me shape my life well.</b
+              >
+            </div>
+          </div>
+          <div class="image-column fade-in">
+            <div class="image-wrapper neon-border-magenta">
+              <img src="/images/Life.jpg" alt="Life and interests" />
+              <div class="image-overlay"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Section 5: Where I'm Headed -->
+      <section class="about-section bg-gradient-5">
+        <div class="section-content">
+          <div class="text-column fade-in">
+            <h2 class="section-title" style="color: #00ff00;">
+              Where I'm Headed
+            </h2>
+            <div class="section-description">
+              I want to keep building the bridge between analytics and human
+              experience – making insights easier to understand and decisions
+              more meaningful.
+              <br /><br />
+              In the longer term, I see myself driving data-led innovation in roles
+              that connect people, processes, and technology – shaping ideas that
+              truly make impact.
+            </div>
+          </div>
+          <div class="image-column fade-in">
+            <div class="image-wrapper neon-border-green">
+              <img src="/images/road.png" alt="Future vision" />
+              <div class="image-overlay"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <script>
+      // Scroll indicator logic
+      const container = document.getElementById("about-container");
+      const dots = document.querySelectorAll(".scroll-dot");
+      const nav = document.getElementById("floating-nav");
+
+      let lastScrollTop = 0;
+      let scrollDelta = 0;
+
+      // FIXED: Improved nav behavior - only hide after significant scroll
+      container?.addEventListener("scroll", () => {
+        const scrollTop = container.scrollTop;
+        const scrollHeight = container.scrollHeight - container.clientHeight;
+        const scrollPercent = scrollTop / scrollHeight;
+
+        // Update active dot
+        const sectionIndex = Math.round(scrollPercent * 4);
+
+        dots.forEach((dot, index) => {
+          if (index === sectionIndex) {
+            dot.classList.add("active");
+          } else {
+            dot.classList.remove("active");
+          }
+        });
+
+        // Elevate nav on scroll
+        if (scrollTop > 50) {
+          nav?.classList.add("elevated");
+        } else {
+          nav?.classList.remove("elevated");
+        }
+
+        // FIXED: Better scroll direction detection with threshold
+        const diff = scrollTop - lastScrollTop;
+        scrollDelta += diff;
+
+        // Only hide/show nav after scrolling 100px in one direction
+        if (Math.abs(scrollDelta) > 200) {
+          if (scrollDelta > 0 && scrollTop > 300) {
+            // Scrolling down significantly
+            nav?.classList.add("hidden");
+          } else if (scrollDelta < 0) {
+            // Scrolling up
+            nav?.classList.remove("hidden");
+          }
+          scrollDelta = 0; // Reset delta
+        }
+
+        lastScrollTop = scrollTop;
+      });
+
+      // Click dot to scroll to section
+      dots.forEach((dot) => {
+        dot.addEventListener("click", () => {
+          const sectionIndex = parseInt(
+            dot.getAttribute("data-section") || "0",
+          );
+          const vh = window.innerHeight;
+          container?.scrollTo({
+            top: sectionIndex * vh,
+            behavior: "smooth",
+          });
+        });
+      });
+    </script>
+  </body>
+</html>

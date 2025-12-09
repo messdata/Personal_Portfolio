@@ -1,0 +1,200 @@
+---
+import { TreePalm } from "@lucide/astro";
+
+interface Props {
+  title: string;
+}
+
+const { title } = Astro.props;
+---
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{title}</title>
+    <link rel="stylesheet" href="/src/styles/panel.css" />
+    <link rel="stylesheet" href="/src/styles/panel-menu.css" />
+    <link rel="stylesheet" href="/src/styles/panel-dashboard.css" />
+  </head>
+  <body>
+    <!-- PIN Lock Screen -->
+    <div id="pre-load">
+      <div class="loader-inner">
+        <div class="loader-logo">
+          <TreePalm size={60} color="#8b5cf6" />
+        </div>
+        <div class="box"></div>
+        <div class="box"></div>
+        <div class="box"></div>
+        <div class="box"></div>
+        <div class="box"></div>
+      </div>
+
+      <div class="pin-container">
+        <h2>Enter PIN to Access Panel</h2>
+        <div class="pin-input-wrapper">
+          <input
+            type="password"
+            maxlength="1"
+            class="pin-digit"
+            id="pin1"
+            autocomplete="off"
+          />
+          <input
+            type="password"
+            maxlength="1"
+            class="pin-digit"
+            id="pin2"
+            autocomplete="off"
+          />
+          <input
+            type="password"
+            maxlength="1"
+            class="pin-digit"
+            id="pin3"
+            autocomplete="off"
+          />
+          <input
+            type="password"
+            maxlength="1"
+            class="pin-digit"
+            id="pin4"
+            autocomplete="off"
+          />
+        </div>
+        <p class="pin-error" id="pinError">Incorrect PIN. Try again.</p>
+      </div>
+    </div>
+
+    <!-- Navigation Overlay -->
+    <div class="nav-overlay" id="navOverlay"></div>
+
+    <!-- Main Panel Content (Hidden until PIN verified) -->
+    <div id="panel-content" style="display: none;">
+      <slot />
+    </div>
+
+    <script>
+      // PIN Authentication
+      const CORRECT_PIN = "0000"; // This should match your .env in production
+
+      // Check if already authenticated
+      const isAuthenticated = sessionStorage.getItem("panel_unlocked");
+      if (isAuthenticated === "true") {
+        document.getElementById("pre-load")?.classList.add("hidden");
+        const panelContent = document.getElementById("panel-content");
+        if (panelContent) panelContent.style.display = "block";
+      }
+
+      // PIN Input Logic
+      const pinInputs = document.querySelectorAll(".pin-digit");
+      const pinError = document.getElementById("pinError");
+
+      pinInputs.forEach((input, index) => {
+        input.addEventListener("input", (e) => {
+          const target = e.target as HTMLInputElement;
+          if (target.value.length === 1) {
+            // Move to next input
+            if (index < pinInputs.length - 1) {
+              (pinInputs[index + 1] as HTMLInputElement).focus();
+            } else {
+              // Last digit entered, verify PIN
+              verifyPIN();
+            }
+          }
+        });
+
+        input.addEventListener("keydown", (e) => {
+          const target = e.target as HTMLInputElement;
+          // Backspace: move to previous input
+          if (e.key === "Backspace" && target.value === "" && index > 0) {
+            (pinInputs[index - 1] as HTMLInputElement).focus();
+          }
+        });
+
+        // Paste handling
+        input.addEventListener("paste", (e) => {
+          e.preventDefault();
+          const pastedData = e.clipboardData?.getData("text") || "";
+          const digits = pastedData.replace(/\D/g, "").slice(0, 4);
+
+          digits.split("").forEach((digit, i) => {
+            if (pinInputs[i]) {
+              (pinInputs[i] as HTMLInputElement).value = digit;
+            }
+          });
+
+          if (digits.length === 4) {
+            verifyPIN();
+          }
+        });
+      });
+
+      // Focus first input on load
+      (pinInputs[0] as HTMLInputElement)?.focus();
+
+      function verifyPIN() {
+        const enteredPIN = Array.from(pinInputs)
+          .map((input) => (input as HTMLInputElement).value)
+          .join("");
+
+        if (enteredPIN === CORRECT_PIN) {
+          // Correct PIN
+          sessionStorage.setItem("panel_unlocked", "true");
+          document.getElementById("pre-load")?.classList.add("hidden");
+          const panelContent = document.getElementById("panel-content");
+          if (panelContent) panelContent.style.display = "block";
+        } else {
+          // Wrong PIN
+          showError();
+          clearPIN();
+        }
+      }
+
+      function showError() {
+        pinError?.classList.add("show");
+        pinInputs.forEach((input) => input.classList.add("shake"));
+
+        setTimeout(() => {
+          pinError?.classList.remove("show");
+          pinInputs.forEach((input) => input.classList.remove("shake"));
+        }, 500);
+      }
+
+      function clearPIN() {
+        pinInputs.forEach((input) => {
+          (input as HTMLInputElement).value = "";
+        });
+        (pinInputs[0] as HTMLInputElement).focus();
+      }
+
+      // Hamburger Menu Toggle
+      document.addEventListener("DOMContentLoaded", () => {
+        const menuIcon = document.querySelector(".menu-icon");
+        const nav = document.querySelector(".nav");
+        const overlay = document.getElementById("navOverlay");
+
+        menuIcon?.addEventListener("click", () => {
+          menuIcon.classList.toggle("active");
+          nav?.classList.toggle("active");
+          overlay?.classList.toggle("active");
+        });
+
+        overlay?.addEventListener("click", () => {
+          menuIcon?.classList.remove("active");
+          nav?.classList.remove("active");
+          overlay?.classList.remove("active");
+        });
+
+        // Logout functionality
+        const logoutBtn = document.querySelector(".logout-btn");
+        logoutBtn?.addEventListener("click", () => {
+          sessionStorage.removeItem("panel_unlocked");
+          window.location.href = "/panel";
+        });
+      });
+    </script>
+  </body>
+</html>

@@ -9,6 +9,27 @@
     "astro": "astro"
   },
   "dependencies": {
-    "astro": "^5.16.1"
+    "@astrojs/react": "^4.4.2",
+    "@lucide/astro": "^0.555.0",
+    "@react-three/drei": "^10.7.7",
+    "@react-three/fiber": "^9.4.0",
+    "@splidejs/splide": "^4.1.4",
+    "@supabase/supabase-js": "^2.86.0",
+    "astro": "^5.16.1",
+    "chart.js": "^4.5.1",
+    "framer-motion": "^12.23.25",
+    "gasp": "^0.0.2",
+    "gsap": "^3.13.0",
+    "hover.css": "^2.3.2",
+    "lucide-react": "^0.555.0",
+    "ogl": "^1.0.11",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0",
+    "three": "^0.181.2"
+  },
+  "devDependencies": {
+    "@types/react": "^19.2.7",
+    "@types/react-dom": "^19.2.3",
+    "@types/three": "^0.181.0"
   }
 }

@@ -1,0 +1,470 @@
+---
+// src/components/panel/Layout/PanelLayout.astro
+import { TreePalm } from "@lucide/astro";
+
+interface Props {
+  title: string;
+}
+
+const { title } = Astro.props;
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{title}</title>
+    <link rel="stylesheet" href="/src/styles/panel.css" />
+    <link rel="stylesheet" href="/src/styles/panel-menu.css" />
+    <link rel="stylesheet" href="/src/styles/panel-dashboard.css" />
+    <style>
+      /* Critical PIN Lock Styles */
+      #pre-load {
+        background: #060010;
+        position: fixed;
+        inset: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 999999;
+        transition: opacity 0.5s ease;
+      }
+
+      #pre-load.hidden {
+        opacity: 0;
+        pointer-events: none;
+      }
+
+      .pin-container {
+        text-align: center;
+        z-index: 10000;
+        position: relative;
+        padding: 1rem;
+      }
+
+      .pin-container h2 {
+        color: white;
+        margin-bottom: 2rem;
+        font-size: 1.5rem;
+        font-weight: 600;
+        margin-top: 2rem;
+      }
+
+      .pin-input-wrapper {
+        display: flex;
+        gap: 1rem;
+        justify-content: center;
+        margin-bottom: 1rem;
+      }
+
+      .pin-digit {
+        width: 60px;
+        height: 60px;
+        font-size: 2rem;
+        text-align: center;
+        background: rgba(255, 255, 255, 0.05);
+        border: 2px solid rgba(255, 255, 255, 0.1);
+        border-radius: 12px;
+        color: white;
+        outline: none;
+        transition: all 0.2s ease;
+      }
+
+      .pin-digit:focus {
+        border-color: #8b5cf6;
+        box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.2);
+      }
+
+      .pin-digit.shake {
+        animation: shake 0.5s;
+      }
+
+      @keyframes shake {
+        0%,
+        100% {
+          transform: translateX(0);
+        }
+        25% {
+          transform: translateX(-10px);
+        }
+        75% {
+          transform: translateX(10px);
+        }
+      }
+
+      .pin-error {
+        color: #ef4444;
+        font-size: 0.875rem;
+        opacity: 0;
+        transition: opacity 0.2s ease;
+        margin-top: 1rem;
+      }
+
+      .pin-error.show {
+        opacity: 1;
+      }
+
+      /* Ripple Loader */
+      .loader-inner {
+        --loader-background: linear-gradient(
+          10deg,
+          rgba(139, 92, 246, 0.2) 0%,
+          rgba(167, 139, 250, 0.2) 100%
+        );
+        position: absolute;
+        height: 250px;
+        aspect-ratio: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .loader-inner .loader-logo {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 60px;
+        height: 60px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        animation: color-change 2s infinite ease-in-out;
+        z-index: 999;
+      }
+
+      .loader-inner .loader-logo svg {
+        width: 100%;
+        height: 100%;
+      }
+
+      .loader-inner .box {
+        position: absolute;
+        background: var(--loader-background);
+        border-radius: 50%;
+        border-top: 1px solid rgba(139, 92, 246, 0.8);
+        box-shadow: rgba(139, 92, 246, 0.3) 0 10px 20px 0;
+        backdrop-filter: blur(5px);
+        animation: ripple 2s infinite ease-in-out;
+      }
+
+      .loader-inner .box:nth-child(1) {
+        width: 25%;
+        aspect-ratio: 1/1;
+        z-index: 99;
+      }
+
+      .loader-inner .box:nth-child(2) {
+        inset: 30%;
+        z-index: 98;
+        border-color: rgba(139, 92, 246, 0.7);
+        animation-delay: 0.2s;
+      }
+
+      .loader-inner .box:nth-child(3) {
+        inset: 20%;
+        z-index: 97;
+        border-color: rgba(139, 92, 246, 0.6);
+        animation-delay: 0.4s;
+      }
+
+      .loader-inner .box:nth-child(4) {
+        inset: 10%;
+        z-index: 96;
+        border-color: rgba(139, 92, 246, 0.4);
+        animation-delay: 0.6s;
+      }
+
+      .loader-inner .box:nth-child(5) {
+        inset: 0;
+        z-index: 95;
+        border-color: rgba(139, 92, 246, 0.2);
+        animation-delay: 0.8s;
+      }
+
+      @keyframes ripple {
+        0% {
+          transform: scale(1);
+          box-shadow: rgba(139, 92, 246, 0.3) 0 10px 20px 0;
+        }
+        50% {
+          transform: scale(1.3);
+          box-shadow: rgba(139, 92, 246, 0.5) 0 30px 40px 0;
+        }
+        100% {
+          transform: scale(1);
+          box-shadow: rgba(139, 92, 246, 0.3) 0 10px 20px 0;
+        }
+      }
+
+      @keyframes color-change {
+        0% {
+          opacity: 0.7;
+        }
+        50% {
+          opacity: 1;
+        }
+        100% {
+          opacity: 0.7;
+        }
+      }
+
+      /* Mobile responsive for PIN screen */
+      @media (max-width: 480px) {
+        .loader-inner {
+          height: 180px;
+        }
+
+        .loader-inner .loader-logo {
+          width: 45px;
+          height: 45px;
+        }
+
+        .pin-container h2 {
+          font-size: 1.125rem;
+          margin-bottom: 1.5rem;
+          margin-top: 1.5rem;
+        }
+
+        .pin-input-wrapper {
+          gap: 0.5rem;
+        }
+
+        .pin-digit {
+          width: 48px;
+          height: 48px;
+          font-size: 1.5rem;
+          border-radius: 10px;
+        }
+
+        .pin-error {
+          font-size: 0.75rem;
+        }
+      }
+
+      /* Panel content wrapper - ensure proper spacing for navbar */
+      #panel-content {
+        padding-top: 5rem; /* Space for fixed navbar */
+        min-height: 100vh;
+        background: #060010;
+      }
+
+      @media (max-width: 768px) {
+        #panel-content {
+          padding-top: 6rem; /* More space for wrapped navbar on tablet */
+        }
+      }
+
+      @media (max-width: 480px) {
+        #panel-content {
+          padding-top: 5.5rem; /* Adjust for mobile navbar */
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <!-- PIN Lock Screen -->
+    <div id="pre-load">
+      <div class="loader-inner">
+        <div class="loader-logo">
+          <TreePalm size={60} color="#8b5cf6" />
+        </div>
+        <div class="box"></div>
+        <div class="box"></div>
+        <div class="box"></div>
+        <div class="box"></div>
+        <div class="box"></div>
+      </div>
+
+      <div class="pin-container">
+        <u>
+          <h2>Enter PIN to Access Panel</h2>
+        </u>
+        <div class="pin-input-wrapper">
+          <input
+            type="password"
+            maxlength="1"
+            class="pin-digit"
+            id="pin1"
+            inputmode="numeric"
+            autocomplete="off"
+          />
+          <input
+            type="password"
+            maxlength="1"
+            class="pin-digit"
+            id="pin2"
+            inputmode="numeric"
+            autocomplete="off"
+          />
+          <input
+            type="password"
+            maxlength="1"
+            class="pin-digit"
+            id="pin3"
+            inputmode="numeric"
+            autocomplete="off"
+          />
+          <input
+            type="password"
+            maxlength="1"
+            class="pin-digit"
+            id="pin4"
+            inputmode="numeric"
+            autocomplete="off"
+          />
+        </div>
+        <p class="pin-error" id="pinError">Incorrect PIN. Try again.</p>
+      </div>
+    </div>
+
+    <!-- Navigation Overlay -->
+    <div class="nav-overlay" id="navOverlay"></div>
+
+    <!-- Main Panel Content (Hidden until PIN verified) -->
+    <div id="panel-content" style="display: none;">
+      <slot />
+    </div>
+
+    <script>
+      // PIN Authentication
+      const CORRECT_PIN = "0000"; // Change this to your desired PIN
+
+      // Check if already authenticated
+      const isAuthenticated = sessionStorage.getItem("panel_unlocked");
+      if (isAuthenticated === "true") {
+        const preLoad = document.getElementById("pre-load");
+        const panelContent = document.getElementById("panel-content");
+
+        if (preLoad) {
+          preLoad.classList.add("hidden");
+        }
+        if (panelContent) {
+          panelContent.style.display = "block";
+        }
+      }
+
+      // PIN Input Logic
+      const pinInputs = document.querySelectorAll(".pin-digit");
+      const pinError = document.getElementById("pinError");
+
+      pinInputs.forEach((input, index) => {
+        input.addEventListener("input", (e) => {
+          const target = e.target as HTMLInputElement;
+          if (target.value.length === 1) {
+            // Move to next input
+            if (index < pinInputs.length - 1) {
+              (pinInputs[index + 1] as HTMLInputElement).focus();
+            } else {
+              // Last digit entered, verify PIN
+              verifyPIN();
+            }
+          }
+        });
+
+        input.addEventListener("keydown", (e) => {
+          const target = e.target as HTMLInputElement;
+          // Backspace: move to previous input
+          if (e.key === "Backspace" && target.value === "" && index > 0) {
+            (pinInputs[index - 1] as HTMLInputElement).focus();
+          }
+        });
+
+        // Paste handling
+        input.addEventListener("paste", (e) => {
+          e.preventDefault();
+          const clipboardEvent = e as ClipboardEvent;
+          const pastedData = clipboardEvent.clipboardData?.getData("text") || "";
+          const digits = pastedData.replace(/\D/g, "").slice(0, 4);
+
+          digits.split("").forEach((digit, i) => {
+            if (pinInputs[i]) {
+              (pinInputs[i] as HTMLInputElement).value = digit;
+            }
+          });
+
+          if (digits.length === 4) {
+            verifyPIN();
+          }
+        });
+      });
+
+      // Focus first input on load
+      setTimeout(() => {
+        (pinInputs[0] as HTMLInputElement)?.focus();
+      }, 100);
+
+      function verifyPIN() {
+        const enteredPIN = Array.from(pinInputs)
+          .map((input) => (input as HTMLInputElement).value)
+          .join("");
+
+        console.log("Entered PIN:", enteredPIN); // Debug log
+
+        if (enteredPIN === CORRECT_PIN) {
+          // Correct PIN
+          sessionStorage.setItem("panel_unlocked", "true");
+
+          const preLoad = document.getElementById("pre-load");
+          const panelContent = document.getElementById("panel-content");
+
+          if (preLoad) {
+            preLoad.classList.add("hidden");
+          }
+          if (panelContent) {
+            panelContent.style.display = "block";
+          }
+        } else {
+          // Wrong PIN
+          console.log("Wrong PIN"); // Debug log
+          showError();
+          clearPIN();
+        }
+      }
+
+      function showError() {
+        pinError?.classList.add("show");
+        pinInputs.forEach((input) => input.classList.add("shake"));
+
+        setTimeout(() => {
+          pinError?.classList.remove("show");
+          pinInputs.forEach((input) => input.classList.remove("shake"));
+        }, 500);
+      }
+
+      function clearPIN() {
+        pinInputs.forEach((input) => {
+          (input as HTMLInputElement).value = "";
+        });
+        (pinInputs[0] as HTMLInputElement)?.focus();
+      }
+
+      // Hamburger Menu Toggle
+      document.addEventListener("DOMContentLoaded", () => {
+        const menuIcon = document.querySelector(".menu-icon");
+        const nav = document.querySelector(".nav");
+        const overlay = document.getElementById("navOverlay");
+
+        menuIcon?.addEventListener("click", () => {
+          menuIcon.classList.toggle("active");
+          nav?.classList.toggle("active");
+          overlay?.classList.toggle("active");
+        });
+
+        overlay?.addEventListener("click", () => {
+          menuIcon?.classList.remove("active");
+          nav?.classList.remove("active");
+          overlay?.classList.remove("active");
+        });
+
+        // Logout functionality
+        const logoutBtn = document.querySelector(".logout-btn");
+        logoutBtn?.addEventListener("click", () => {
+          sessionStorage.removeItem("panel_unlocked");
+          window.location.href = "/panel";
+        });
+      });
+    </script>
+  </body>
+</html>

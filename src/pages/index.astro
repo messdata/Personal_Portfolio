@@ -1,16 +1,385 @@
 ---
-
+import Particles from "../components/welcome/Particles";
+import SimpleAnimatedText from "../components/welcome/SimpleAnimatedText";
+import Orb from "../components/welcome/Orb";
+import FlippingButton from "../components/welcome/FlippingButton";
+import NavigationNodes from "../components/welcome/NavigationNodes";
+import "../styles/responsive.css";
 ---
 
-<html lang="en">
-	<head>
-		<meta charset="utf-8" />
-		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-		<meta name="viewport" content="width=device-width" />
-		<meta name="generator" content={Astro.generator} />
-		<title>Astro</title>
-	</head>
-	<body>
-		<h1>Astro</h1>
-	</body>
+<!doctype html>
+<html lang="en" style="margin: 0; padding: 0; height: 100%; overflow: hidden;">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Welcome to MindTree</title>
+    <style is:global>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        margin: 0 !important;
+        padding: 0 !important;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        background: #1e1e24;
+        font-family:
+          system-ui,
+          -apple-system,
+          sans-serif;
+      }
+
+      /* Intro Text Styles */
+      .intro-texts {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 2rem;
+        text-align: center;
+        padding: 0 1rem;
+      }
+
+      .intro-text {
+        font-size: var(--intro-text-size, 3.5rem);
+        font-weight: 700;
+        letter-spacing: 0.05em;
+        color: #ffffff;
+        text-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+      }
+
+      /* Card Styles - 3D Flipping Button */
+      .card {
+        width: var(--button-size, 180px);
+        height: var(--button-size, 180px);
+        cursor: pointer;
+        perspective: 1000px;
+        position: relative;
+        border-radius: 50%;
+        box-shadow:
+          0 0 10px rgba(59, 130, 246, 0.4),
+          0 0 25px rgba(59, 130, 246, 0.2);
+        z-index: 10;
+      }
+
+      .content {
+        text-align: center;
+        position: relative;
+        transition: all 2s;
+        background-image: linear-gradient(
+          145deg,
+          #18053a 0%,
+          #3d0e6b 50%,
+          #1f1f3e 100%
+        );
+        width: 100%;
+        height: 100%;
+        padding: 0;
+        transform-style: preserve-3d;
+        border-radius: 50%;
+        border: 1.5px solid #f5ededff;
+        opacity: 1;
+      }
+
+      .card.clicked .content {
+        transform: rotateY(0.5turn);
+      }
+
+      .front,
+      .back {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        padding: 0;
+        transform-style: preserve-3d;
+        backface-visibility: hidden;
+        border-radius: 50%;
+      }
+
+      .face-text {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+        height: 100%;
+      }
+
+      .title {
+        transform: translateZ(20px);
+        font-size: var(--button-font-size, 2rem);
+        color: #fff;
+        text-transform: uppercase;
+        font-weight: 600;
+      }
+
+      .back {
+        transform: rotateY(0.5turn);
+        background: #360033;
+        background: -webkit-linear-gradient(to right, #0b8793, #360033);
+        background: linear-gradient(to right, #0b8793, #360033);
+        border: 1.5px solid #f5ededff;
+      }
+
+      .back .title {
+        color: #e6f1e6;
+      }
+
+      /* Orb container responsive */
+      #orb-container {
+        width: var(--orb-size, 350px);
+        height: var(--orb-size, 350px);
+      }
+    </style>
+  </head>
+  <body
+    style="margin: 0; padding: 0; width: 100vw; height: 100vh; overflow: hidden; background: #000;"
+  >
+    <!-- Background: Particles (Base layer, always visible) -->
+    <div
+      style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 0; background: #000; width: 100vw; height: 100vh;"
+    >
+      <div
+        style="width: 100%; height: 100%; position: absolute; top: 0; left: 0;"
+      >
+        <Particles
+          client:load
+          particleColors={["#3b82f6", "#8b5cf6", "#ec4899"]}
+          particleCount={300}
+          particleSpread={15}
+          speed={0.15}
+          particleBaseSize={80}
+          moveParticlesOnHover={true}
+          particleHoverFactor={1.5}
+          alphaParticles={true}
+          disableRotation={false}
+          sizeRandomness={1.2}
+        />
+      </div>
+    </div>
+
+    <!-- Intro Overlay: Animated Text -->
+    <div
+      id="intro-overlay"
+      style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 50; pointer-events: none; transition: opacity 1.5s ease-out; opacity: 1; display: flex; align-items: center; justify-content: center;"
+    >
+      <div class="intro-texts">
+        <SimpleAnimatedText
+          client:load
+          text="Hello, I'm Chinmay..."
+          delay={0}
+          className="intro-text"
+        />
+        <div style="margin-top: 2rem;">
+          <SimpleAnimatedText
+            client:load
+            text="Welcome to my portfolio..."
+            delay={2.5}
+            className="intro-text"
+          />
+        </div>
+      </div>
+    </div>
+
+    <!-- Main Content: Orb + Flipping Button + Navigation Nodes -->
+    <div
+      id="main-content"
+      style="
+        position: fixed; 
+        top: 0; 
+        left: 0; 
+        right: 0; 
+        bottom: 0; 
+        z-index: 40; 
+        opacity: 0; 
+        transition: opacity 1.5s ease-in; 
+        pointer-events: none;
+      "
+    >
+      <div
+        id="content-container"
+        style="display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100%; height: 100%; position: relative;"
+      >
+        <!-- Orb Background -->
+        <div
+          id="orb-container"
+          style="
+            position: absolute; 
+            top: 50%; 
+            left: 50%; 
+            transform: translate(-50%, -50%); 
+            z-index: 1; 
+            overflow: hidden;
+            border-radius: 50%; 
+          "
+        >
+          <Orb
+            client:load
+            hoverIntensity={0.5}
+            rotateOnHover={true}
+            hue={140}
+            brightness={2}
+          />
+        </div>
+
+        <!-- Flipping Button -->
+        <div
+          id="button-container"
+          style="z-index: 10; text-align: center; pointer-events: auto; position: relative;"
+        >
+          <FlippingButton client:load className="shadow-2xl" />
+        </div>
+
+        <!-- Navigation Nodes -->
+        <div
+          id="nodes-container"
+          style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none;"
+        >
+          <NavigationNodes client:load isVisible={false} />
+        </div>
+      </div>
+    </div>
+
+    <script>
+      document.addEventListener("DOMContentLoaded", () => {
+        // Check if we should skip intro (coming from other pages)
+        const skipIntro = sessionStorage.getItem("skipIntro") === "true";
+
+        if (skipIntro) {
+          // Skip intro, go straight to main content
+          const intro = document.getElementById("intro-overlay");
+          const mainContent = document.getElementById("main-content");
+
+          if (intro) {
+            intro.style.display = "none";
+          }
+
+          if (mainContent) {
+            mainContent.style.opacity = "1";
+            mainContent.style.pointerEvents = "auto";
+          }
+
+          // Clear the flag
+          sessionStorage.removeItem("skipIntro");
+        } else {
+          // Normal intro flow
+          setTimeout(() => {
+            const intro = document.getElementById("intro-overlay");
+            const mainContent = document.getElementById("main-content");
+
+            if (intro) intro.style.opacity = "0";
+
+            setTimeout(() => {
+              if (mainContent) {
+                mainContent.style.opacity = "1";
+                mainContent.style.pointerEvents = "auto";
+              }
+            }, 500);
+          }, 6000);
+        }
+
+        // Phase III: Navigation nodes logic
+        let nodesVisible = false;
+        let currentHue = 140;
+        let colorCycleInterval = null;
+
+        const buttonContainer = document.getElementById("button-container");
+        const nodesContainer = document.getElementById("nodes-container");
+        const contentContainer = document.getElementById("content-container");
+        const orbContainer = document.getElementById("orb-container");
+
+        function startColorCycle() {
+          if (colorCycleInterval) return;
+
+          colorCycleInterval = setInterval(() => {
+            currentHue = (currentHue + 10) % 360;
+            window.dispatchEvent(
+              new CustomEvent("updateOrbHue", { detail: currentHue }),
+            );
+          }, 200);
+        }
+
+        function stopColorCycle() {
+          if (colorCycleInterval) {
+            clearInterval(colorCycleInterval);
+            colorCycleInterval = null;
+          }
+          currentHue = 140;
+          window.dispatchEvent(
+            new CustomEvent("updateOrbHue", { detail: 140 }),
+          );
+        }
+
+        if (buttonContainer) {
+          buttonContainer.addEventListener("click", () => {
+            const card = buttonContainer.querySelector(".card");
+
+            setTimeout(() => {
+              const isExploreState = card?.classList.contains("clicked");
+
+              if (isExploreState && !nodesVisible) {
+                nodesVisible = true;
+                if (nodesContainer) {
+                  nodesContainer.style.pointerEvents = "auto";
+                }
+                window.dispatchEvent(
+                  new CustomEvent("showNodes", { detail: true }),
+                );
+                startColorCycle();
+              } else if (!isExploreState && nodesVisible) {
+                nodesVisible = false;
+                if (nodesContainer) {
+                  nodesContainer.style.pointerEvents = "none";
+                }
+                window.dispatchEvent(
+                  new CustomEvent("showNodes", { detail: false }),
+                );
+                stopColorCycle();
+              }
+            }, 100);
+          });
+        }
+
+        if (contentContainer) {
+          contentContainer.addEventListener("click", (e) => {
+            if (!nodesVisible) return;
+
+            const isButton = buttonContainer?.contains(e.target);
+            const isNode =
+              nodesContainer?.contains(e.target) && e.target !== nodesContainer;
+
+            if (!isButton && !isNode) {
+              nodesVisible = false;
+              if (nodesContainer) {
+                nodesContainer.style.pointerEvents = "none";
+              }
+
+              const card = buttonContainer?.querySelector(".card");
+              card?.classList.remove("clicked");
+
+              window.dispatchEvent(
+                new CustomEvent("showNodes", { detail: false }),
+              );
+              stopColorCycle();
+            }
+          });
+        }
+
+        // Handle node navigation
+        window.addEventListener("nodeClicked", (e) => {
+          const nodeName = e.detail;
+          console.log("Navigating to:", nodeName);
+
+          // Navigate to the appropriate page
+          window.location.href = `/${nodeName}`;
+        });
+      });
+    </script>
+  </body>
 </html>

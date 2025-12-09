@@ -1,0 +1,1633 @@
+---
+import Particles from "../components/welcome/Particles";
+---
+
+<!doctype html>
+<html lang="en" style="margin: 0; padding: 0; height: 100%; overflow: hidden;">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Resume - Chinmay Patil</title>
+    <style is:global>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        margin: 0 !important;
+        padding: 0 !important;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        background: #0a0a0a;
+        font-family:
+          system-ui,
+          -apple-system,
+          sans-serif;
+      }
+
+      /* Floating Navigation */
+      .floating-nav {
+        position: fixed;
+        top: 1rem;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 1000;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.25rem 0.7rem;
+        background: rgba(0, 0, 0, 0.7);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 2rem;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+      }
+
+      .nav-link {
+        color: rgba(255, 255, 255, 0.8);
+        text-decoration: none;
+        padding: 0.5rem 1rem;
+        border-radius: 1.5rem;
+        transition: all 0.2s ease;
+        font-size: 0.875rem;
+        font-weight: 500;
+      }
+
+      .nav-link:hover {
+        background: rgba(255, 255, 255, 0.1);
+        color: white;
+      }
+
+      /* Main Container */
+      .resume-container {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100vh;
+        overflow-y: auto;
+        padding: 4rem 1rem 2rem;
+      }
+
+      .resume-wrapper {
+        max-width: 1200px;
+        margin: 0 auto;
+      }
+
+      /* Header Section */
+      .resume-header {
+        text-align: center;
+        margin-bottom: 1.125rem;
+      }
+
+      .resume-title {
+        font-size: 2.5rem;
+        font-weight: 700;
+        color: white;
+        margin-bottom: 0.5rem;
+      }
+
+      @media (min-width: 768px) {
+        .resume-title {
+          font-size: 3.5rem;
+        }
+      }
+
+      .resume-subtitle {
+        font-size: 1rem;
+        color: rgba(255, 255, 255, 0.6);
+        margin-bottom: 2rem;
+        text-transform: uppercase;
+        letter-spacing: 0.15em;
+      }
+
+      /* Download Buttons */
+      .download-buttons {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+        align-items: center;
+        margin-bottom: 3rem;
+      }
+
+      @media (min-width: 640px) {
+        .download-buttons {
+          flex-direction: row;
+          justify-content: center;
+        }
+      }
+
+      .download-btn {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        padding: 1rem 2rem;
+        background: linear-gradient(135deg, #1a8fb6, #0df4f4);
+        border: none;
+        border-radius: 0.5rem;
+        color: #000;
+        font-size: 0.875rem;
+        font-weight: 600;
+        text-decoration: none;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        min-width: 200px;
+        justify-content: center;
+      }
+
+      .download-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 20px 25px -5px rgba(26, 143, 182, 0.3);
+      }
+
+      .download-btn.secondary {
+        background: linear-gradient(135deg, #ff00ff, #ff66ff);
+      }
+
+      .download-btn svg {
+        width: 1.25rem;
+        height: 1.25rem;
+      }
+
+      /* Quick Links */
+      .quick-links {
+        display: flex;
+        justify-content: center;
+        gap: 1.5rem;
+        margin-bottom: 3rem;
+      }
+
+      .quick-link {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.75rem 1.5rem;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 2rem;
+        color: rgba(255, 255, 255, 0.8);
+        text-decoration: none;
+        font-size: 0.875rem;
+        transition: all 0.3s ease;
+      }
+
+      .quick-link:hover {
+        background: rgba(255, 255, 255, 0.1);
+        border-color: rgba(0, 255, 255, 0.3);
+        color: #00ffff;
+        transform: translateY(-2px);
+      }
+
+      .quick-link svg {
+        width: 1rem;
+        height: 1rem;
+      }
+
+      /* Tab Navigation */
+      .tab-nav {
+        display: flex;
+        justify-content: center;
+        gap: 0.5rem;
+        margin-bottom: 2rem;
+        flex-wrap: wrap;
+        padding: 0 1rem;
+      }
+
+      .tab-button {
+        padding: 0.75rem 1.5rem;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 2rem;
+        color: rgba(255, 255, 255, 0.6);
+        font-size: 0.875rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        white-space: nowrap;
+      }
+
+      .tab-button:hover {
+        background: rgba(255, 255, 255, 0.1);
+        color: rgba(255, 255, 255, 0.9);
+      }
+
+      .tab-button.active {
+        background: linear-gradient(
+          135deg,
+          rgba(26, 143, 182, 0.2),
+          rgba(13, 244, 244, 0.2)
+        );
+        border-color: rgba(0, 255, 255, 0.3);
+        color: #00ffff;
+        box-shadow: 0 0 20px rgba(0, 255, 255, 0.2);
+      }
+
+      /* Tab Content */
+      .tab-content {
+        display: none;
+        animation: fadeIn 0.5s ease;
+      }
+
+      .tab-content.active {
+        display: block;
+      }
+
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(10px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      /* Content Cards */
+      .content-card {
+        background: rgba(0, 0, 0, 0.5);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 0.75rem;
+        padding: 1.1rem;
+        margin-bottom: 1.5rem;
+        backdrop-filter: blur(10px);
+        transition: all 0.3s ease;
+      }
+
+      .content-card:hover {
+        border-color: rgba(0, 255, 255, 0.3);
+        box-shadow: 0 10px 30px rgba(0, 255, 255, 0.1);
+        transform: translateY(-2px);
+      }
+
+      /* Profile Section */
+      .profile-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+      }
+
+      @media (min-width: 768px) {
+        .profile-grid {
+          grid-template-columns: 1fr 1fr;
+        }
+      }
+
+      .profile-text {
+        font-size: 1rem;
+        line-height: 1.8;
+        color: rgba(255, 255, 255, 0.8);
+      }
+
+      .profile-stats {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1rem;
+      }
+
+      .stat-item {
+        text-align: center;
+        padding: 0.5rem;
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 0.5rem;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+      }
+
+      .stat-value {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #00ffff;
+        margin-bottom: 0.25rem;
+      }
+
+      .stat-label {
+        font-size: 0.75rem;
+        color: rgba(255, 255, 255, 0.5);
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+      }
+
+      /* Experience Timeline */
+      .timeline {
+        position: relative;
+        padding-left: 2rem;
+      }
+
+      .timeline::before {
+        content: "";
+        position: absolute;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        width: 2px;
+        background: linear-gradient(to bottom, #1a8fb6, #0df4f4, #ff00ff);
+      }
+
+      .timeline-item {
+        position: relative;
+        margin-bottom: 2rem;
+      }
+
+      .timeline-dot {
+        position: absolute;
+        left: -2.5rem;
+        top: 0.5rem;
+        width: 1rem;
+        height: 1rem;
+        border-radius: 50%;
+        background: #00ffff;
+        box-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
+        z-index: 10;
+      }
+
+      .timeline-dot::before {
+        content: "";
+        position: absolute;
+        inset: -4px;
+        border-radius: 50%;
+        border: 2px solid rgba(0, 255, 255, 0.3);
+        animation: pulse 2s ease-in-out infinite;
+      }
+
+      @keyframes pulse {
+        0%,
+        100% {
+          transform: scale(1);
+          opacity: 1;
+        }
+        50% {
+          transform: scale(1.2);
+          opacity: 0.5;
+        }
+      }
+
+      .experience-card {
+        background: rgba(0, 0, 0, 0.3);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 0.5rem;
+        padding: 1.5rem;
+        transition: all 0.3s ease;
+      }
+
+      .experience-card:hover {
+        background: rgba(0, 0, 0, 0.5);
+        border-color: rgba(0, 255, 255, 0.3);
+      }
+
+      .experience-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 1rem;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+      }
+
+      .job-title {
+        font-size: 1.125rem;
+        font-weight: 600;
+        color: #00ffff;
+      }
+
+      .company-name {
+        font-size: 0.875rem;
+        color: rgba(255, 255, 255, 0.7);
+        margin-top: 0.25rem;
+      }
+
+      .job-duration {
+        font-size: 0.75rem;
+        color: rgba(255, 255, 255, 0.5);
+        background: rgba(255, 255, 255, 0.05);
+        padding: 0.25rem 0.75rem;
+        border-radius: 1rem;
+      }
+
+      .job-description {
+        font-size: 0.875rem;
+        line-height: 1.6;
+        color: rgba(255, 255, 255, 0.7);
+      }
+
+      .job-description ul {
+        list-style: none;
+        padding: 0;
+        margin-top: 1rem;
+      }
+
+      .job-description li {
+        position: relative;
+        padding-left: 1.5rem;
+        margin-bottom: 0.5rem;
+      }
+
+      .job-description li::before {
+        content: "▹";
+        position: absolute;
+        left: 0;
+        color: #00ffff;
+        font-weight: bold;
+      }
+
+      /* Skills Grid */
+      .skills-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1rem;
+      }
+
+      .skill-category {
+        background: rgba(0, 0, 0, 0.3);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 0.5rem;
+        padding: 1.5rem;
+        transition: all 0.3s ease;
+      }
+
+      .skill-category:hover {
+        border-color: rgba(255, 0, 255, 0.3);
+        box-shadow: 0 10px 30px rgba(255, 0, 255, 0.1);
+        transform: translateY(-4px);
+      }
+
+      .skill-category-title {
+        font-size: 0.875rem;
+        font-weight: 600;
+        color: #ff00ff;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        margin-bottom: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+      }
+
+      .skill-category-icon {
+        width: 1.25rem;
+        height: 1.25rem;
+        color: #ff00ff;
+      }
+
+      .skill-tags {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+      }
+
+      .skill-tag {
+        padding: 0.5rem 1rem;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 1.5rem;
+        font-size: 0.75rem;
+        color: rgba(255, 255, 255, 0.8);
+        transition: all 0.3s ease;
+      }
+
+      .skill-tag:hover {
+        background: rgba(255, 0, 255, 0.1);
+        border-color: rgba(255, 0, 255, 0.3);
+        color: #ff00ff;
+      }
+
+      /* Education Cards */
+      .education-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+      }
+
+      @media (min-width: 768px) {
+        .education-grid {
+          grid-template-columns: repeat(2, 1fr);
+        }
+      }
+
+      .education-card {
+        background: rgba(0, 0, 0, 0.3);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 0.5rem;
+        padding: 1.5rem;
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .education-card::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: linear-gradient(90deg, #ffff00, #00ff00);
+      }
+
+      .education-card:hover {
+        background: rgba(0, 0, 0, 0.5);
+        border-color: rgba(255, 255, 0, 0.3);
+        transform: translateY(-4px);
+      }
+
+      .degree {
+        font-size: 1.125rem;
+        font-weight: 600;
+        color: #ffff00;
+        margin-bottom: 0.5rem;
+      }
+
+      .university {
+        font-size: 0.875rem;
+        color: rgba(255, 255, 255, 0.7);
+        margin-bottom: 0.5rem;
+      }
+
+      .education-duration {
+        font-size: 0.75rem;
+        color: rgba(255, 255, 255, 0.5);
+        margin-bottom: 1rem;
+      }
+
+      .education-details {
+        font-size: 0.875rem;
+        line-height: 1.6;
+        color: rgba(255, 255, 255, 0.7);
+      }
+
+      .education-details ul {
+        list-style: none;
+        padding: 0;
+        margin-top: 0.5rem;
+      }
+
+      .education-details li {
+        padding-left: 1rem;
+        margin-bottom: 0.25rem;
+        position: relative;
+      }
+
+      .education-details li::before {
+        content: "•";
+        position: absolute;
+        left: 0;
+        color: #ffff00;
+      }
+
+      /* Contact Info */
+      .contact-info {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1rem;
+      }
+
+      .contact-item {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        padding: 1rem;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 0.5rem;
+        transition: all 0.3s ease;
+        margin-bottom: 1rem;
+      }
+
+      .contact-item:hover {
+        background: rgba(255, 255, 255, 0.1);
+        border-color: rgba(0, 255, 0, 0.3);
+      }
+
+      .contact-icon {
+        width: 2.5rem;
+        height: 2.5rem;
+        border-radius: 50%;
+        background: linear-gradient(
+          135deg,
+          rgba(0, 255, 0, 0.2),
+          rgba(0, 255, 255, 0.2)
+        );
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+      }
+
+      .contact-icon svg {
+        width: 1.25rem;
+        height: 1.25rem;
+        color: #00ff00;
+      }
+
+      .contact-details {
+        flex: 1;
+      }
+
+      .contact-label {
+        font-size: 0.75rem;
+        color: rgba(255, 255, 255, 0.5);
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+      }
+
+      .contact-value {
+        font-size: 0.875rem;
+        color: rgba(255, 255, 255, 0.9);
+        margin-top: 0.25rem;
+      }
+
+      .contact-value a {
+        color: inherit;
+        text-decoration: none;
+        transition: color 0.3s ease;
+      }
+
+      .contact-value a:hover {
+        color: #00ff00;
+      }
+
+      /* Mobile Adjustments - Tablet */
+      @media (max-width: 768px) {
+        .floating-nav {
+          padding: 0.5rem 0.75rem;
+          gap: 0.25rem;
+          width: calc(100% - 2rem);
+          max-width: 420px;
+          justify-content: center;
+        }
+
+        .nav-link {
+          font-size: 0.75rem;
+          padding: 0.4rem 0.7rem;
+        }
+
+        .resume-container {
+          padding: 4.5rem 1rem 2rem;
+        }
+
+        .resume-title {
+          font-size: 2rem;
+        }
+
+        .resume-subtitle {
+          font-size: 0.875rem;
+          margin-bottom: 1.5rem;
+        }
+
+        .download-buttons {
+          gap: 0.75rem;
+          margin-bottom: 2rem;
+        }
+
+        .download-btn {
+          padding: 0.85rem 1.5rem;
+          font-size: 0.8rem;
+          min-width: 180px;
+        }
+
+        .quick-links {
+          flex-wrap: wrap;
+          gap: 0.75rem;
+          margin-bottom: 2rem;
+        }
+
+        .quick-link {
+          padding: 0.6rem 1rem;
+          font-size: 0.8rem;
+        }
+
+        .tab-nav {
+          gap: 0.4rem;
+          margin-bottom: 1.5rem;
+          padding: 0 0.5rem;
+        }
+
+        .tab-button {
+          padding: 0.6rem 1rem;
+          font-size: 0.75rem;
+        }
+
+        .timeline {
+          padding-left: 1.5rem;
+        }
+
+        .timeline-dot {
+          left: -2rem;
+          width: 0.875rem;
+          height: 0.875rem;
+        }
+
+        .content-card {
+          padding: 1.25rem;
+          margin-bottom: 1.25rem;
+        }
+
+        .experience-card {
+          padding: 1.25rem;
+        }
+
+        .skill-category {
+          padding: 1.25rem;
+        }
+
+        .education-card {
+          padding: 1.25rem;
+        }
+      }
+
+      /* Mobile Adjustments - Small screens */
+      @media (max-width: 480px) {
+        .floating-nav {
+          padding: 0.4rem 0.5rem;
+          gap: 0.15rem;
+          width: calc(100% - 1.5rem);
+        }
+
+        .nav-link {
+          font-size: 0.65rem;
+          padding: 0.35rem 0.5rem;
+        }
+
+        .resume-container {
+          padding: 4.25rem 0.75rem 1.5rem;
+        }
+
+        .resume-title {
+          font-size: 1.5rem;
+        }
+
+        .resume-subtitle {
+          font-size: 0.7rem;
+          margin-bottom: 1.25rem;
+          letter-spacing: 0.1em;
+        }
+
+        .download-buttons {
+          gap: 0.6rem;
+          margin-bottom: 1.25rem;
+        }
+
+        .download-btn {
+          padding: 0.7rem 1rem;
+          font-size: 0.7rem;
+          min-width: 150px;
+          gap: 0.5rem;
+        }
+
+        .download-btn svg {
+          width: 1rem;
+          height: 1rem;
+        }
+
+        .quick-links {
+          gap: 0.5rem;
+          margin-bottom: 1.25rem;
+        }
+
+        .quick-link {
+          padding: 0.5rem 0.8rem;
+          font-size: 0.7rem;
+          gap: 0.35rem;
+        }
+
+        .quick-link svg {
+          width: 0.85rem;
+          height: 0.85rem;
+        }
+
+        .tab-nav {
+          gap: 0.3rem;
+          margin-bottom: 1rem;
+          padding: 0 0.25rem;
+        }
+
+        .tab-button {
+          padding: 0.45rem 0.65rem;
+          font-size: 0.6rem;
+        }
+
+        .content-card {
+          padding: 1rem;
+          margin-bottom: 1rem;
+        }
+
+        .profile-grid {
+          gap: 1rem;
+        }
+
+        .profile-text {
+          font-size: 0.8rem;
+          line-height: 1.6;
+        }
+
+        .profile-stats {
+          gap: 0.5rem;
+        }
+
+        .stat-item {
+          padding: 0.4rem;
+        }
+
+        .stat-value {
+          font-size: 1.125rem;
+        }
+
+        .stat-label {
+          font-size: 0.55rem;
+          letter-spacing: 0.05em;
+        }
+
+        .timeline {
+          padding-left: 1.25rem;
+        }
+
+        .timeline-item {
+          margin-bottom: 1.25rem;
+        }
+
+        .timeline-dot {
+          left: -1.65rem;
+          width: 0.75rem;
+          height: 0.75rem;
+        }
+
+        .experience-card {
+          padding: 1rem;
+        }
+
+        .job-title {
+          font-size: 0.9rem;
+        }
+
+        .company-name {
+          font-size: 0.7rem;
+        }
+
+        .job-duration {
+          font-size: 0.6rem;
+          padding: 0.2rem 0.5rem;
+        }
+
+        .job-description {
+          font-size: 0.75rem;
+          line-height: 1.5;
+        }
+
+        .job-description ul {
+          margin-top: 0.75rem;
+        }
+
+        .job-description li {
+          padding-left: 1rem;
+          margin-bottom: 0.4rem;
+        }
+
+        .skills-grid {
+          grid-template-columns: 1fr;
+          gap: 0.75rem;
+        }
+
+        .skill-category {
+          padding: 1rem;
+        }
+
+        .skill-category-title {
+          font-size: 0.7rem;
+          margin-bottom: 0.75rem;
+        }
+
+        .skill-category-icon {
+          width: 1rem;
+          height: 1rem;
+        }
+
+        .skill-tags {
+          gap: 0.35rem;
+        }
+
+        .skill-tag {
+          padding: 0.35rem 0.65rem;
+          font-size: 0.6rem;
+        }
+
+        .education-grid {
+          gap: 0.75rem;
+        }
+
+        .education-card {
+          padding: 1rem;
+        }
+
+        .degree {
+          font-size: 0.9rem;
+        }
+
+        .university {
+          font-size: 0.7rem;
+        }
+
+        .education-duration {
+          font-size: 0.6rem;
+          margin-bottom: 0.75rem;
+        }
+
+        .education-details {
+          font-size: 0.75rem;
+          line-height: 1.5;
+        }
+
+        .contact-info {
+          grid-template-columns: 1fr;
+          gap: 0.6rem;
+        }
+
+        .contact-item {
+          padding: 0.75rem;
+          gap: 0.75rem;
+        }
+
+        .contact-icon {
+          width: 2rem;
+          height: 2rem;
+        }
+
+        .contact-icon svg {
+          width: 1rem;
+          height: 1rem;
+        }
+
+        .contact-label {
+          font-size: 0.6rem;
+        }
+
+        .contact-value {
+          font-size: 0.75rem;
+          word-break: break-word;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Particle Background -->
+    <div
+      style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 0;"
+    >
+      <Particles
+        client:load
+        particleColors={["#1a8fb6", "#ff00ff", "#ffff00", "#00ff00"]}
+        particleCount={200}
+        particleSpread={20}
+        speed={0.1}
+        particleBaseSize={60}
+        moveParticlesOnHover={true}
+        particleHoverFactor={1.3}
+        alphaParticles={true}
+        disableRotation={false}
+        sizeRandomness={1.5}
+      />
+    </div>
+
+    <!-- Floating Navigation -->
+    <nav class="floating-nav">
+      <a
+        href="/"
+        class="nav-link"
+        onclick="sessionStorage.setItem('skipIntro', 'true')">Home</a
+      >
+      <a href="/about" class="nav-link">About</a>
+      <a href="/projects" class="nav-link">Projects</a>
+      <a href="/contact" class="nav-link">Contact</a>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="resume-container">
+      <div class="resume-wrapper">
+        <!-- Header -->
+        <header class="resume-header">
+          <h1 class="resume-title">Chinmay Patil</h1>
+          <p class="resume-subtitle">Business Analytics Professional</p>
+
+          <!-- Download Buttons -->
+          <div class="download-buttons">
+            <a
+              href="/downloads/Chinmay_Patil_CV.pdf"
+              download
+              class="download-btn"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                ></path>
+              </svg>
+              Download CV
+            </a>
+            <a
+              href="/downloads/Chinmay_Patil_CoverLetter.pdf"
+              download
+              class="download-btn secondary"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M3 19v-8.93a2 2 0 01.89-1.664l7-4.666a2 2 0 012.22 0l7 4.666A2 2 0 0121 10.07V19M3 19a2 2 0 002 2h14a2 2 0 002-2M3 19l6.75-4.5M21 19l-6.75-4.5M3 10l6.75 4.5M21 10l-6.75 4.5m0 0l-1.14.76a2 2 0 01-2.22 0l-1.14-.76"
+                ></path>
+              </svg>
+              Download Cover Letter
+            </a>
+          </div>
+
+          <!-- Quick Links -->
+          <div class="quick-links">
+            <a
+              href="https://www.linkedin.com/in/chinmay-patil-055a41104/"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="quick-link"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="currentColor"
+              >
+                <path
+                  d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"
+                ></path>
+              </svg>
+              LinkedIn
+            </a>
+            <a
+              href="https://github.com/messdata"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="quick-link"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="currentColor"
+              >
+                <path
+                  d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"
+                ></path>
+              </svg>
+              GitHub
+            </a>
+            <a href="mailto:chinmay1997patil@gmail.com" class="quick-link">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+                ></path>
+              </svg>
+              Email
+            </a>
+          </div>
+        </header>
+
+        <!-- Tab Navigation -->
+        <nav class="tab-nav">
+          <button class="tab-button active" data-tab="overview">Overview</button
+          >
+          <button class="tab-button" data-tab="experience">Experience</button>
+          <button class="tab-button" data-tab="skills">Skills</button>
+          <button class="tab-button" data-tab="education">Education</button>
+          <button class="tab-button" data-tab="contact">Contact</button>
+        </nav>
+
+        <!-- Tab: Overview -->
+        <div class="tab-content active" id="tab-overview">
+          <div class="content-card">
+            <div class="profile-grid">
+              <div>
+                <h2
+                  style="color: #1a8fb6; margin-bottom: 1rem; font-size: 1.5rem;"
+                >
+                  Professional Profile
+                </h2>
+                <p class="profile-text">
+                  Dynamic and results-driven professional with over six years of
+                  experience leading business operations, procurement, and
+                  e-commerce growth across the FMCG and retail sectors. Skilled
+                  in connecting analytics with real-world decisions to simplify
+                  workflows, improve KPIs, and strengthen supplier
+                  relationships.
+                </p>
+                <p class="profile-text" style="margin-top: 1rem;">
+                  A strategic thinker who combines data-led insights with
+                  commercial acumen to drive performance, efficiency, and
+                  sustainable growth. Recently graduated with a 2.1 Honours MSc
+                  in Business Analytics from Maynooth University.
+                </p>
+              </div>
+              <div class="profile-stats">
+                <div class="stat-item">
+                  <div class="stat-value">6+</div>
+                  <div class="stat-label">Years Experience</div>
+                </div>
+                <div class="stat-item">
+                  <div class="stat-value">3</div>
+                  <div class="stat-label">Major Companies</div>
+                </div>
+                <div class="stat-item">
+                  <div class="stat-value">MSc</div>
+                  <div class="stat-label">Business Analytics</div>
+                </div>
+                <div class="stat-item">
+                  <div class="stat-value">2.1</div>
+                  <div class="stat-label">Honours Degree</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="content-card">
+            <h2 style="color: #ff00ff; margin-bottom: 1rem; font-size: 1.5rem;">
+              Visa Status
+            </h2>
+            <p class="profile-text">
+              <strong style="color: #00ff00;">Stamp 1G</strong> - Full Right to Work
+              in Ireland
+            </p>
+          </div>
+        </div>
+
+        <!-- Tab: Experience -->
+        <div class="tab-content" id="tab-experience">
+          <div class="timeline">
+            <!-- Purplle.com -->
+            <div class="timeline-item">
+              <div class="timeline-dot"></div>
+              <div class="experience-card">
+                <div class="experience-header">
+                  <div>
+                    <h3 class="job-title">Category & Key Account Manager</h3>
+                    <div class="company-name">Purplle.com | Mumbai, India</div>
+                  </div>
+                  <div class="job-duration">March 2023 – July 2024</div>
+                </div>
+                <div class="job-description">
+                  <ul>
+                    <li>
+                      <strong>Strategic Growth:</strong> Drove 30% Year-on-Year (YoY)
+                      category growth through strategic range expansion and supplier
+                      collaboration.
+                    </li>
+                    <li>
+                      <strong>Procurement & Margin Optimization:</strong> Negotiated
+                      procurement strategies that improved category margins by 12%
+                      YoY and established process improvements to optimize cost per
+                      order.
+                    </li>
+                    <li>
+                      <strong>Demand Planning:</strong> Implemented demand forecasting
+                      models using Excel and Metabase, reducing stockouts by 22%
+                      and improving service compliance by over 20%.
+                    </li>
+                    <li>
+                      <strong>Vendor Management:</strong> Partnered with suppliers
+                      to secure favourable terms, ensuring reliable product availability
+                      and reduced turnaround times.
+                    </li>
+                    <li>
+                      <strong>Data Analysis:</strong> Utilized Excel dashboards to
+                      analyze sales and P&L trends, maintaining strong margins and
+                      minimizing overstocking.
+                    </li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+
+            <!-- Dunzo -->
+            <div class="timeline-item">
+              <div class="timeline-dot"></div>
+              <div class="experience-card">
+                <div class="experience-header">
+                  <div>
+                    <h3 class="job-title">Senior Key Account Manager</h3>
+                    <div class="company-name">Dunzo | Mumbai, India</div>
+                  </div>
+                  <div class="job-duration">June 2022 – March 2023</div>
+                </div>
+                <div class="job-description">
+                  <ul>
+                    <li>
+                      <strong>Portfolio Management:</strong> Oversaw procurement
+                      and operations for FMCG categories, managing a monthly portfolio
+                      valued at approximately €220,000 (2 Cr).
+                    </li>
+                    <li>
+                      <strong>Strategic Partnerships:</strong> Secured best-in-market
+                      pricing and credit conditions by partnering with top FMCG brands
+                      including HUL, Nestlé, Britannia, and Dabur.
+                    </li>
+                    <li>
+                      <strong>Process Improvement:</strong> Developed procurement
+                      trackers and forecasting dashboards to monitor inventory health,
+                      order lead times, and supplier performance.
+                    </li>
+                    <li>
+                      <strong>Operational Efficiency:</strong> Collaborated with
+                      internal supply chain teams to reduce strain on working capital
+                      and increase procurement visibility.
+                    </li>
+                    <li>
+                      <strong>Leadership Support:</strong> Assisted senior management
+                      in formulating pricing and promotion plans to support regional
+                      expansion.
+                    </li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+
+            <!-- Zomato -->
+            <div class="timeline-item">
+              <div class="timeline-dot"></div>
+              <div class="experience-card">
+                <div class="experience-header">
+                  <div>
+                    <h3 class="job-title">
+                      Business Analyst & Account Manager
+                    </h3>
+                    <div class="company-name">Zomato | Hyderabad, India</div>
+                  </div>
+                  <div class="job-duration">November 2020 – April 2022</div>
+                </div>
+                <div class="job-description">
+                  <ul>
+                    <li>
+                      <strong>Revenue Generation:</strong> Managed relationships
+                      with over 180 suppliers, producing a monthly GMV of approximately
+                      €50,000 (45L).
+                    </li>
+                    <li>
+                      <strong>Sales Achievement:</strong> Successfully executed upselling
+                      and cross-selling strategies, generating approximately €9,000
+                      (8L) in revenue per quarter.
+                    </li>
+                    <li>
+                      <strong>Performance Analysis:</strong> Conducted cost and performance
+                      analyses to evaluate logistics and supplier effectiveness.
+                    </li>
+                    <li>
+                      <strong>Data Insights:</strong> Collaborated with data teams
+                      to develop business insights and reports that directly supported
+                      pricing strategy decisions.
+                    </li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+
+            <!-- Group Edge -->
+            <div class="timeline-item">
+              <div class="timeline-dot"></div>
+              <div class="experience-card">
+                <div class="experience-header">
+                  <div>
+                    <h3 class="job-title">Executive, Project Operations</h3>
+                    <div class="company-name">
+                      Group Edge Brand & Media Managers | Mumbai, India
+                    </div>
+                  </div>
+                  <div class="job-duration">October 2018 – November 2019</div>
+                </div>
+                <div class="job-description">
+                  <ul>
+                    <li>
+                      <strong>Logistics Management:</strong> Oversaw logistics and
+                      vendor coordination for multi-brand marketing campaigns across
+                      diverse retail locations.
+                    </li>
+                    <li>
+                      <strong>Project Delivery:</strong> Coordinated with suppliers
+                      and contractors to ensure quality standards, compliance, and
+                      timely project delivery.
+                    </li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tab: Skills -->
+        <div class="tab-content" id="tab-skills">
+          <div class="skills-grid">
+            <div class="skill-category">
+              <div class="skill-category-title">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  class="skill-category-icon"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+                  ></path>
+                </svg>
+                Strategic Procurement
+              </div>
+              <div class="skill-tags">
+                <span class="skill-tag">Vendor Management</span>
+                <span class="skill-tag">Negotiation</span>
+                <span class="skill-tag">Supply Chain Optimization</span>
+                <span class="skill-tag">Inventory Health</span>
+              </div>
+            </div>
+
+            <div class="skill-category">
+              <div class="skill-category-title">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  class="skill-category-icon"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                  ></path>
+                </svg>
+                Business Analytics
+              </div>
+              <div class="skill-tags">
+                <span class="skill-tag">Demand Forecasting</span>
+                <span class="skill-tag">KPI Tracking</span>
+                <span class="skill-tag">P&L Analysis</span>
+                <span class="skill-tag">Data Visualization</span>
+              </div>
+            </div>
+
+            <div class="skill-category">
+              <div class="skill-category-title">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  class="skill-category-icon"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
+                  ></path>
+                </svg>
+                Account Management
+              </div>
+              <div class="skill-tags">
+                <span class="skill-tag">Client Relationship Management</span>
+                <span class="skill-tag">Cross-selling/Upselling</span>
+                <span class="skill-tag">Category Growth</span>
+              </div>
+            </div>
+
+            <div class="skill-category">
+              <div class="skill-category-title">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  class="skill-category-icon"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"></path>
+                </svg>
+                Technical Skills
+              </div>
+              <div class="skill-tags">
+                <span class="skill-tag">Excel</span>
+                <span class="skill-tag">SQL</span>
+                <span class="skill-tag">Tableau</span>
+                <span class="skill-tag">Python</span>
+                <span class="skill-tag">Metabase</span>
+                <span class="skill-tag">CRM Tools</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tab: Education -->
+        <div class="tab-content" id="tab-education">
+          <div class="education-grid">
+            <div class="education-card">
+              <h3 class="degree">MSc in Business Analytics</h3>
+              <div class="university">Maynooth University, Ireland</div>
+              <div class="education-duration">
+                September 2024 – September 2025
+              </div>
+              <div class="education-details">
+                <strong>Honours 2:1</strong>
+                <ul>
+                  <li>
+                    Focus: Data-led decision-making and sustainable operations
+                  </li>
+                  <li>
+                    Projects: Age Friendly Ireland (AFI) | Res4City
+                    Sustainability Tracker
+                  </li>
+                  <li>
+                    Certifications: Tableau | LinkedIn Business Analytics |
+                    Res4City Sustainability Engagement
+                  </li>
+                </ul>
+              </div>
+            </div>
+
+            <div class="education-card">
+              <h3 class="degree">BSc in Information Technology</h3>
+              <div class="university">OES SANPADA, India</div>
+              <div class="education-duration">2015 – 2018</div>
+              <div class="education-details">
+                Foundation in software development, databases, and systems
+                analysis that supports analytical and technical capabilities in
+                business operations.
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tab: Contact -->
+        <div class="tab-content" id="tab-contact">
+          <div class="content-card">
+            <h2
+              style="color: #00ff00; margin-bottom: 1.5rem; font-size: 1.5rem;"
+            >
+              Get In Touch
+            </h2>
+            <div class="contact-info">
+              <div class="contact-item">
+                <div class="contact-icon">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+                    ></path>
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                  </svg>
+                </div>
+                <div class="contact-details">
+                  <div class="contact-label">Location</div>
+                  <div class="contact-value">Dublin, Ireland</div>
+                </div>
+              </div>
+            </div>
+            <div class="contact-item">
+              <div class="contact-icon">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+                  ></path>
+                </svg>
+              </div>
+              <div class="contact-details">
+                <div class="contact-label">Email</div>
+                <div class="contact-value">
+                  <a href="mailto:chinmay1997patil@gmail.com"
+                    >chinmay1997patil@gmail.com</a
+                  >
+                </div>
+              </div>
+            </div>
+
+            <div class="contact-item">
+              <div class="contact-icon">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="24"
+                  height="24"
+                  viewBox="0 0 24 24"
+                  fill="currentColor"
+                >
+                  <path
+                    d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"
+                  ></path>
+                </svg>
+              </div>
+              <div class="contact-details">
+                <div class="contact-label">LinkedIn</div>
+                <div class="contact-value">
+                  <a
+                    href="https://www.linkedin.com/in/chinmay-patil-055a41104/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    linkedin.com/in/chinmay-patil
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="content-card" style="text-align: center;">
+          <h3 style="color: #00ffff; margin-bottom: 1rem;">
+            Prefer a different way to connect?
+          </h3>
+          <p style="color: rgba(255, 255, 255, 0.7); margin-bottom: 1.5rem;">
+            Visit the Contact page for more options including a direct message
+            form.
+          </p>
+          <a
+            href="/contact"
+            style="display: inline-block; padding: 1rem 2rem; background: linear-gradient(135deg, #ffff00, #00ff00); color: #000; border-radius: 0.5rem; text-decoration: none; font-weight: 600; transition: all 0.3s ease;"
+          >
+            Go to Contact Page →
+          </a>
+        </div>
+      </div>
+    </main>
+  </body>
+
+  <script>
+    // Tab switching logic
+    const tabButtons = document.querySelectorAll(".tab-button");
+    const tabContents = document.querySelectorAll(".tab-content");
+
+    tabButtons.forEach((button) => {
+      button.addEventListener("click", () => {
+        const targetTab = button.getAttribute("data-tab");
+
+        // Remove active class from all buttons and contents
+        tabButtons.forEach((btn) => btn.classList.remove("active"));
+        tabContents.forEach((content) => content.classList.remove("active"));
+
+        // Add active class to clicked button and corresponding content
+        button.classList.add("active");
+        document.getElementById(`tab-${targetTab}`).classList.add("active");
+
+        // Scroll to top of container smoothly
+        document.querySelector(".resume-container").scrollTo({
+          top: 0,
+          behavior: "smooth",
+        });
+      });
+    });
+  </script>
+</html>

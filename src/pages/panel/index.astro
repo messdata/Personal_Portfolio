@@ -1,0 +1,361 @@
+---
+// src/pages/panel/index.astro
+import PanelLayout from "../../components/panel/Layout/PanelLayout.astro";
+import Particles from "../../components/welcome/Particles";
+import CustomBentoCards from "../../components/panel/Custombentocards";
+import { TreePalm } from "@lucide/astro";
+import { supabase } from "../../lib/supabase";
+
+// Fetch Dashboard data
+const { data: projects } = await supabase
+  .from("projects")
+  .select("id, visible");
+const { data: messages } = await supabase
+  .from("messages")
+  .select("id, is_read");
+const { data: analytics } = await supabase.from("analytics").select("id");
+const { data: media } = await supabase.from("media").select("id");
+
+// Calculate stats
+const totalProjects = projects?.length || 0;
+const visibleProjects = projects?.filter((p) => p.visible).length || 0;
+const totalMessages = messages?.length || 0;
+const unreadMessages = messages?.filter((m) => !m.is_read).length || 0;
+const totalViews = analytics?.length || 0;
+const totalMedia = media?.length || 0;
+
+// Calculate page live days (launched October 2025)
+const launchDate = new Date("2025-10-01");
+const today = new Date();
+const pageLiveDays = Math.floor(
+  (today.getTime() - launchDate.getTime()) / (1000 * 60 * 60 * 24),
+);
+
+// Profile visits = total unique visitors
+const { data: uniqueVisitors } = await supabase
+  .from("analytics")
+  .select("visitor_id");
+
+const profileVisits = uniqueVisitors
+  ? new Set(uniqueVisitors.map((v) => v.visitor_id)).size
+  : 0;
+
+// Fetch recent project views
+const { data: projectAnalytics } = await supabase
+  .from("analytics")
+  .select("page_path, viewed_at, event_type")
+  .ilike("page_path", "%/project%")
+  .eq("event_type", "page_view")
+  .order("viewed_at", { ascending: false })
+  .limit(50);
+
+// Transform analytics data
+const projectViewsMap = new Map();
+
+if (projectAnalytics) {
+  projectAnalytics.forEach((entry) => {
+    const pathParts = entry.page_path.split("/");
+    const projectSlug = pathParts[pathParts.length - 1] || "Unknown";
+    const projectName = projectSlug
+      .split("-")
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(" ");
+
+    if (projectViewsMap.has(projectName)) {
+      const existing = projectViewsMap.get(projectName);
+      existing.view_count += 1;
+      if (new Date(entry.viewed_at) > new Date(existing.last_viewed_raw)) {
+        existing.last_viewed_raw = entry.viewed_at;
+        existing.last_viewed = formatTimeAgo(entry.viewed_at);
+      }
+    } else {
+      projectViewsMap.set(projectName, {
+        project_name: projectName,
+        view_count: 1,
+        last_viewed: formatTimeAgo(entry.viewed_at),
+        last_viewed_raw: entry.viewed_at,
+      });
+    }
+  });
+}
+
+const recentProjectViews = Array.from(projectViewsMap.values())
+  .sort(
+    (a, b) =>
+      new Date(b.last_viewed_raw).getTime() -
+      new Date(a.last_viewed_raw).getTime(),
+  )
+  .slice(0, 5)
+  .map(({ last_viewed_raw, ...rest }) => rest);
+
+function formatTimeAgo(timestamp: string): string {
+  const now = new Date();
+  const then = new Date(timestamp);
+  const diffMs = now.getTime() - then.getTime();
+  const diffMinutes = Math.floor(diffMs / (1000 * 60));
+  const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+
+  if (diffMinutes < 1) return "Just now";
+  if (diffMinutes < 60) return `${diffMinutes}m ago`;
+  if (diffHours < 24) return `${diffHours}h ago`;
+  if (diffDays < 30) return `${diffDays}d ago`;
+
+  const diffMonths = Math.floor(diffDays / 30);
+  return `${diffMonths}mo ago`;
+}
+---
+
+<PanelLayout title="Dashboard - MindTree Panel">
+  <style is:global>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      margin: 0 !important;
+      padding: 0 !important;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: #0a0a0a;
+      font-family:
+        "Inter",
+        system-ui,
+        -apple-system,
+        sans-serif;
+    }
+
+    /* Pill Navigation Bar */
+    .pill-navbar {
+      position: fixed;
+      top: 1.5rem;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 1000;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: rgba(255, 255, 255, 0.03);
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 50px;
+      padding: 0.5rem;
+    }
+
+    .pill-nav-item {
+      padding: 0.625rem 1.25rem;
+      background: transparent;
+      border: 1px solid transparent;
+      border-radius: 50px;
+      color: rgba(255, 255, 255, 0.6);
+      text-decoration: none;
+      font-size: 0.875rem;
+      font-weight: 500;
+      transition: all 0.2s ease;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    .pill-nav-item:hover {
+      background: rgba(255, 255, 255, 0.05);
+      color: rgba(255, 255, 255, 0.9);
+    }
+
+    .pill-nav-item.active {
+      background: rgba(139, 92, 246, 0.15);
+      border-color: rgba(139, 92, 246, 0.3);
+      color: #8b5cf6;
+    }
+
+    .pill-nav-divider {
+      width: 1px;
+      height: 20px;
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    .pill-nav-item.logout {
+      border-color: rgba(239, 68, 68, 0.2);
+      color: rgba(239, 68, 68, 0.8);
+    }
+
+    .pill-nav-item.logout:hover {
+      background: rgba(239, 68, 68, 0.1);
+      border-color: rgba(239, 68, 68, 0.4);
+      color: #ef4444;
+    }
+
+    /* Main Container */
+    .panel-container {
+      width: 100%;
+      height: 100vh;
+      overflow-y: auto;
+      scroll-behavior: smooth;
+    }
+
+    .panel-container::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    .panel-container::-webkit-scrollbar-track {
+      background: rgba(255, 255, 255, 0.02);
+    }
+
+    .panel-container::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 3px;
+    }
+
+    /* Panel Section */
+    .panel-section {
+      position: relative;
+      width: 100%;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0rem 2rem 4rem 2rem;
+    }
+
+    .section-content {
+      max-width: 1200px;
+      width: 100%;
+      z-index: 10;
+    }
+
+    /* Dashboard Header */
+    .dashboard-header {
+      text-align: center;
+      margin-bottom: 0.5rem;
+    }
+
+    .dashboard-title {
+      font-size: 2.5rem;
+      font-weight: 600;
+      color: white;
+      margin-bottom: 0.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 1rem;
+      letter-spacing: -0.02em;
+    }
+
+    .dashboard-subtitle {
+      font-size: 1rem;
+      color: rgba(255, 255, 255, 0.4);
+      font-weight: 400;
+      letter-spacing: 0.01em;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .pill-navbar {
+        top: 1rem;
+        left: 1rem;
+        right: 1rem;
+        transform: none;
+        flex-wrap: wrap;
+        justify-content: center;
+        max-width: calc(100% - 2rem);
+      }
+
+      .pill-nav-item {
+        padding: 0.5rem 1rem;
+        font-size: 0.8rem;
+      }
+
+      .pill-nav-divider {
+        display: none;
+      }
+
+      .panel-section {
+        padding: 8rem 1.5rem 3rem 1.5rem;
+      }
+
+      .dashboard-title {
+        font-size: 2rem;
+      }
+    }
+  </style>
+
+  <!-- Particle Background -->
+  <div
+    style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 0;"
+  >
+    <Particles
+      client:load
+      particleColors={["#8b5cf6", "#6366f1", "#a78bfa"]}
+      particleCount={120}
+      particleSpread={25}
+      speed={0.05}
+      particleBaseSize={40}
+      moveParticlesOnHover={true}
+      particleHoverFactor={1.1}
+      alphaParticles={true}
+      disableRotation={false}
+      sizeRandomness={1.2}
+    />
+  </div>
+
+  <!-- Pill Navigation Bar -->
+  <nav class="pill-navbar">
+    <a href="/panel" class="pill-nav-item active">Dashboard</a>
+    <a href="/panel/messages" class="pill-nav-item">Messages</a>
+    <a href="/panel/projects" class="pill-nav-item">Projects</a>
+    <a href="/panel/analytics" class="pill-nav-item">Analytics</a>
+    <a href="/panel/media" class="pill-nav-item">Media</a>
+    <div class="pill-nav-divider"></div>
+    <a
+      href="/"
+      class="pill-nav-item"
+      onclick="sessionStorage.setItem('skipIntro', 'true')">Live Site</a
+    >
+    <button class="pill-nav-item logout" id="logoutBtn">Logout</button>
+  </nav>
+
+  <!-- Main Panel Container -->
+  <main class="panel-container">
+    <section class="panel-section">
+      <div class="section-content">
+        <!-- Header -->
+        <div class="dashboard-header">
+          <h1 class="dashboard-title">
+            <TreePalm size={36} color="#8b5cf6" />
+            Dashboard
+          </h1>
+          <p class="dashboard-subtitle">Overview of your MindTree portfolio</p>
+        </div>
+
+        <!-- Custom Bento Cards with Realtime -->
+        <CustomBentoCards
+          client:load
+          totalProjects={totalProjects}
+          visibleProjects={visibleProjects}
+          totalMessages={totalMessages}
+          unreadMessages={unreadMessages}
+          totalViews={totalViews}
+          totalMedia={totalMedia}
+          pageLiveDays={pageLiveDays}
+          profileVisits={profileVisits}
+          recentProjectViews={recentProjectViews}
+          enableSpotlight={true}
+          enableBorderGlow={true}
+          glowColor="132, 0, 255"
+          spotlightRadius={300}
+        />
+      </div>
+    </section>
+  </main>
+
+  <script>
+    // Logout
+    document.getElementById("logoutBtn")?.addEventListener("click", () => {
+      sessionStorage.removeItem("panel_unlocked");
+      window.location.href = "/panel";
+    });
+  </script>
+</PanelLayout>

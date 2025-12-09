@@ -1,0 +1,963 @@
+---
+// src/pages/panel/messages.astro
+import PanelLayout from "../../components/panel/Layout/PanelLayout.astro";
+import PillNavbar from "../../components/panel/PillNavbar.astro";
+import Particles from "../../components/welcome/Particles";
+import { supabase } from "../../lib/supabase";
+
+// Fetch all messages from Supabase
+const { data: messages, error } = await supabase
+    .from("messages")
+    .select("*")
+    .order("created_at", { ascending: false });
+
+const allMessages = messages || [];
+const unreadCount = allMessages.filter((m) => !m.is_read).length;
+const todayMessages = allMessages.filter((m) => {
+    const msgDate = new Date(m.created_at);
+    const today = new Date();
+    return msgDate.toDateString() === today.toDateString();
+}).length;
+
+// Get recent messages (last 5)
+const recentMessages = allMessages.slice(0, 5);
+---
+
+<PanelLayout title="Messages - MindTree Panel">
+    <style is:global>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html,
+        body {
+            margin: 0 !important;
+            padding: 0 !important;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background: #060010;
+            font-family:
+                "Inter",
+                system-ui,
+                -apple-system,
+                sans-serif;
+        }
+
+        /* CSS Variables */
+        :root {
+            --border-color: #392e4e;
+            --background-dark: #060010;
+            --purple-primary: rgba(132, 0, 255, 1);
+            --purple-glow: rgba(132, 0, 255, 0.2);
+            --cyan-primary: rgba(6, 182, 212, 1);
+            --cyan-glow: rgba(6, 182, 212, 0.2);
+        }
+
+        /* Scroll Indicators */
+        .scroll-indicators {
+            position: fixed;
+            right: 2rem;
+            top: 50%;
+            transform: translateY(-50%);
+            z-index: 999;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .scroll-indicator {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            padding: 0.5rem;
+            border-radius: 8px;
+            text-decoration: none;
+        }
+
+        .scroll-indicator:hover {
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .scroll-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.3);
+            transition: all 0.3s ease;
+        }
+
+        .scroll-indicator.active .scroll-dot {
+            background: white;
+            width: 8px;
+            height: 8px;
+            box-shadow: 0 0 12px rgba(255, 255, 255, 0.3);
+        }
+
+        .scroll-label {
+            font-size: 0.75rem;
+            color: rgba(255, 255, 255, 0.5);
+            font-weight: 500;
+            opacity: 0;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+        }
+
+        .scroll-indicator:hover .scroll-label,
+        .scroll-indicator.active .scroll-label {
+            opacity: 1;
+        }
+
+        /* Main Container */
+        .panel-container {
+            width: 100%;
+            height: 100vh;
+            overflow-y: auto;
+            scroll-behavior: smooth;
+        }
+
+        .panel-container::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .panel-container::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .panel-container::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 2px;
+        }
+
+        /* Panel Section */
+        .panel-section {
+            position: relative;
+            width: 100%;
+            min-height: 100vh;
+            padding: 2rem 2rem 4rem 2rem;
+        }
+
+        .section-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            z-index: 10;
+        }
+
+        /* Header */
+        .section-header {
+            margin-bottom: 2rem;
+        }
+
+        .section-title {
+            font-size: 2rem;
+            font-weight: 600;
+            color: white;
+            margin-bottom: 0.5rem;
+            letter-spacing: -0.02em;
+        }
+
+        .section-subtitle {
+            font-size: 0.875rem;
+            color: rgba(255, 255, 255, 0.4);
+        }
+
+        /* Custom Bento Section */
+        .custom-bento-section {
+            position: relative;
+            width: 100%;
+            user-select: none;
+        }
+
+        .custom-card-grid {
+            display: grid;
+            gap: 1rem;
+            max-width: 1400px;
+            margin: 0 auto;
+            grid-template-columns: repeat(4, 1fr);
+            grid-auto-rows: minmax(200px, auto);
+        }
+
+        /* Custom Bento Card */
+        .custom-bento-card {
+            position: relative;
+            background: var(--background-dark);
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            padding: 1.5rem;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            color: white;
+            display: flex;
+            flex-direction: column;
+            min-height: 200px;
+
+            --glow-x: 50%;
+            --glow-y: 50%;
+            --glow-intensity: 0;
+            --glow-radius: 200px;
+        }
+
+        .custom-bento-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+
+        .custom-bento-card--large {
+            grid-column: span 4;
+            grid-row: span 0;
+        }
+
+        .custom-bento-card--wide {
+            grid-column: span 2;
+        }
+
+        .custom-bento-card--tall {
+            grid-row: span 2;
+        }
+
+        /* Card Header */
+        .custom-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 1.5rem;
+        }
+
+        .custom-card-label {
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.5);
+            font-weight: 500;
+            letter-spacing: 0.02em;
+        }
+
+        .custom-card-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+        }
+
+        .custom-card-icon svg {
+            width: 20px;
+            height: 20px;
+            opacity: 0.8;
+        }
+
+        /* Card Content */
+        .custom-card-content {
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+            justify-content: flex-end;
+        }
+
+        .custom-card-title {
+            font-size: 2.5rem;
+            font-weight: 600;
+            margin: 0.75rem 0 0.25rem 0;
+            color: white;
+            letter-spacing: -0.02em;
+        }
+
+        .custom-card-description {
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.6);
+            margin: 0;
+        }
+
+        /* Border Glow Effect */
+        .custom-bento-card--border-glow::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            padding: 6px;
+            background: radial-gradient(
+                var(--glow-radius) circle at var(--glow-x) var(--glow-y),
+                rgba(6, 182, 212, calc(var(--glow-intensity) * 0.8)) 0%,
+                rgba(6, 182, 212, calc(var(--glow-intensity) * 0.4)) 30%,
+                transparent 60%
+            );
+            border-radius: inherit;
+            -webkit-mask:
+                linear-gradient(#fff 0 0) content-box,
+                linear-gradient(#fff 0 0);
+            -webkit-mask-composite: xor;
+            mask:
+                linear-gradient(#fff 0 0) content-box,
+                linear-gradient(#fff 0 0);
+            mask-composite: exclude;
+            pointer-events: none;
+            opacity: 1;
+            transition: opacity 0.3s ease;
+            z-index: 1;
+        }
+
+        .custom-bento-card--border-glow:hover::after {
+            opacity: 1;
+        }
+
+        .custom-bento-card--border-glow:hover {
+            box-shadow:
+                0 4px 20px rgba(6, 182, 212, 0.2),
+                0 0 30px var(--cyan-glow);
+        }
+
+        /* Messages List Content */
+        .messages-list-content {
+            justify-content: flex-start;
+            height: 100%;
+        }
+
+        .messages-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            margin-top: 1rem;
+            max-height: 480px;
+            overflow-y: auto;
+            padding-right: 0.5rem;
+        }
+
+        .messages-list::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .messages-list::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: 2px;
+        }
+
+        .messages-list::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 2px;
+        }
+
+        /* Message Item */
+        .message-item {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+            padding: 1rem;
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 12px;
+            transition: all 0.2s ease;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .message-item.unread {
+            border-color: rgba(6, 182, 212, 0.3);
+            background: rgba(6, 182, 212, 0.02);
+        }
+
+        .message-item.unread::before {
+            content: "";
+            position: absolute;
+            left: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 3px;
+            height: 60%;
+            background: #06b6d4;
+            border-radius: 0 2px 2px 0;
+        }
+
+        .message-item:hover {
+            background: rgba(255, 255, 255, 0.04);
+            border-color: rgba(255, 255, 255, 0.1);
+            transform: translateX(4px);
+        }
+
+        .message-item.expanded {
+            background: rgba(255, 255, 255, 0.05);
+            border-color: rgba(255, 255, 255, 0.12);
+        }
+
+        .message-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 1rem;
+        }
+
+        .message-sender {
+            flex: 1;
+        }
+
+        .sender-name {
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: white;
+            margin-bottom: 0.25rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .unread-dot {
+            width: 6px;
+            height: 6px;
+            background: #06b6d4;
+            border-radius: 50%;
+            box-shadow: 0 0 8px rgba(6, 182, 212, 0.5);
+        }
+
+        .sender-email {
+            font-size: 0.75rem;
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        .message-time {
+            font-size: 0.75rem;
+            color: rgba(255, 255, 255, 0.4);
+            white-space: nowrap;
+        }
+
+        .message-preview {
+            font-size: 0.875rem;
+            color: rgba(255, 255, 255, 0.6);
+            line-height: 1.5;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .message-full-content {
+            display: none;
+            padding-top: 1rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.06);
+            margin-top: 1rem;
+        }
+
+        .message-item.expanded .message-full-content {
+            display: block;
+        }
+
+        .message-item.expanded .message-preview {
+            display: none;
+        }
+
+        .message-full {
+            font-size: 0.875rem;
+            color: rgba(255, 255, 255, 0.7);
+            line-height: 1.7;
+            white-space: pre-wrap;
+            margin-bottom: 1.25rem;
+        }
+
+        .message-actions {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .action-btn {
+            padding: 0.5rem 1rem;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 6px;
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 0.75rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .action-btn:hover {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: rgba(255, 255, 255, 0.2);
+            color: white;
+        }
+
+        .action-btn.primary {
+            background: rgba(6, 182, 212, 0.1);
+            border-color: rgba(6, 182, 212, 0.3);
+            color: #06b6d4;
+        }
+
+        .action-btn.primary:hover {
+            background: rgba(6, 182, 212, 0.15);
+            border-color: rgba(6, 182, 212, 0.5);
+        }
+
+        .action-btn.danger {
+            background: rgba(239, 68, 68, 0.1);
+            border-color: rgba(239, 68, 68, 0.3);
+            color: #ef4444;
+        }
+
+        .action-btn.danger:hover {
+            background: rgba(239, 68, 68, 0.15);
+            border-color: rgba(239, 68, 68, 0.5);
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            color: rgba(255, 255, 255, 0.4);
+            font-size: 14px;
+            padding: 2rem;
+        }
+
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .custom-card-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .custom-bento-card--large {
+                grid-column: span 3;
+                grid-row: span 1;
+            }
+
+            .messages-list {
+                max-height: 300px;
+            }
+        }
+
+        @media (max-width: 640px) {
+            .panel-section {
+                padding: 5rem 1rem 3rem 1rem;
+            }
+
+            .custom-card-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .custom-bento-card--large,
+            .custom-bento-card--wide {
+                grid-column: span 1;
+                grid-row: span 1;
+            }
+
+            .custom-bento-card {
+                min-height: 180px;
+            }
+
+            .custom-card-title {
+                font-size: 2rem;
+            }
+
+            .messages-list {
+                max-height: 250px;
+            }
+
+            .message-actions {
+                flex-direction: column;
+            }
+
+            .action-btn {
+                width: 100%;
+                text-align: center;
+            }
+        }
+    </style>
+
+    <!-- Particle Background -->
+    <div
+        style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 0;"
+    >
+        <Particles
+            client:load
+            particleColors={["#06b6d4", "#22d3ee", "#67e8f9"]}
+            particleCount={200}
+            particleSpread={30}
+            speed={0.04}
+            particleBaseSize={45}
+            moveParticlesOnHover={true}
+            particleHoverFactor={1.08}
+            alphaParticles={true}
+            disableRotation={false}
+            sizeRandomness={1.2}
+        />
+    </div>
+
+    <!-- PillNavbar -->
+    <PillNavbar activePage="messages" />
+
+    <!-- Main Container -->
+    <main class="panel-container">
+        <section class="panel-section">
+            <div class="section-content">
+                <!-- Header -->
+                <div class="section-header">
+                    <h1 class="section-title">Messages</h1>
+                    <p class="section-subtitle">
+                        Contact form inquiries from your portfolio
+                    </p>
+                </div>
+
+                <!-- Custom Bento Grid -->
+                <div class="custom-bento-section">
+                    <div class="custom-card-grid">
+                        <!-- Total Messages Card -->
+                        <div
+                            class="custom-bento-card custom-bento-card--border-glow"
+                        >
+                            <div class="custom-card-header">
+                                <span class="custom-card-label"
+                                    >TOTAL MESSAGES</span
+                                >
+                                <div class="custom-card-icon">
+                                    <svg
+                                        xmlns="http://www.w3.org/2000/svg"
+                                        width="20"
+                                        height="20"
+                                        viewBox="0 0 24 24"
+                                        fill="none"
+                                        stroke="#06b6d4"
+                                        stroke-width="2"
+                                    >
+                                        <path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"
+                                        ></path>
+                                    </svg>
+                                </div>
+                            </div>
+                            <div class="custom-card-content">
+                                <h2 class="custom-card-title">
+                                    {allMessages.length}
+                                </h2>
+                                <p class="custom-card-description">
+                                    All inquiries
+                                </p>
+                            </div>
+                        </div>
+
+                        <!-- Unread Messages Card -->
+                        <div
+                            class="custom-bento-card custom-bento-card--border-glow"
+                        >
+                            <div class="custom-card-header">
+                                <span class="custom-card-label">UNREAD</span>
+                                <div class="custom-card-icon">
+                                    <svg
+                                        xmlns="http://www.w3.org/2000/svg"
+                                        width="20"
+                                        height="20"
+                                        viewBox="0 0 24 24"
+                                        fill="none"
+                                        stroke="#06b6d4"
+                                        stroke-width="2"
+                                    >
+                                        <path
+                                            d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"
+                                        ></path>
+                                        <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"
+                                        ></path>
+                                    </svg>
+                                </div>
+                            </div>
+                            <div class="custom-card-content">
+                                <h2 class="custom-card-title">{unreadCount}</h2>
+                                <p class="custom-card-description">
+                                    Need attention
+                                </p>
+                            </div>
+                        </div>
+
+                        <!-- Today Messages Card -->
+                        <div
+                            class="custom-bento-card custom-bento-card--border-glow"
+                        >
+                            <div class="custom-card-header">
+                                <span class="custom-card-label">TODAY</span>
+                                <div class="custom-card-icon">
+                                    <svg
+                                        xmlns="http://www.w3.org/2000/svg"
+                                        width="20"
+                                        height="20"
+                                        viewBox="0 0 24 24"
+                                        fill="none"
+                                        stroke="#06b6d4"
+                                        stroke-width="2"
+                                    >
+                                        <rect
+                                            width="18"
+                                            height="18"
+                                            x="3"
+                                            y="4"
+                                            rx="2"
+                                            ry="2"></rect>
+                                        <line x1="16" x2="16" y1="2" y2="6"
+                                        ></line>
+                                        <line x1="8" x2="8" y1="2" y2="6"
+                                        ></line>
+                                        <line x1="3" x2="21" y1="10" y2="10"
+                                        ></line>
+                                    </svg>
+                                </div>
+                            </div>
+                            <div class="custom-card-content">
+                                <h2 class="custom-card-title">
+                                    {todayMessages}
+                                </h2>
+                                <p class="custom-card-description">New today</p>
+                            </div>
+                        </div>
+
+                        <!-- Quick Actions Card -->
+                        <div
+                            class="custom-bento-card custom-bento-card--border-glow"
+                        >
+                            <div class="custom-card-header">
+                                <span class="custom-card-label"
+                                    >QUICK ACTIONS</span
+                                >
+                                <div class="custom-card-icon">
+                                    <svg
+                                        xmlns="http://www.w3.org/2000/svg"
+                                        width="20"
+                                        height="20"
+                                        viewBox="0 0 24 24"
+                                        fill="none"
+                                        stroke="#06b6d4"
+                                        stroke-width="2"
+                                    >
+                                        <polyline points="9 11 12 14 22 4"
+                                        ></polyline>
+                                        <path
+                                            d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"
+                                        ></path>
+                                    </svg>
+                                </div>
+                            </div>
+                            <div class="custom-card-content">
+                                <button
+                                    class="action-btn primary"
+                                    style="width: 100%; margin-bottom: 0.5rem;"
+                                    onclick="markAllAsRead()"
+                                >
+                                    Mark All Read
+                                </button>
+                                <p class="custom-card-description">
+                                    Manage all at once
+                                </p>
+                            </div>
+                        </div>
+
+                        <!-- Recent Messages List - Large Card -->
+                        <div
+                            class="custom-bento-card custom-bento-card--large custom-bento-card--border-glow"
+                        >
+                            <div class="custom-card-header">
+                                <span class="custom-card-label"
+                                    >RECENT MESSAGES</span
+                                >
+                                <div class="custom-card-icon">
+                                    <svg
+                                        xmlns="http://www.w3.org/2000/svg"
+                                        width="20"
+                                        height="20"
+                                        viewBox="0 0 24 24"
+                                        fill="none"
+                                        stroke="#06b6d4"
+                                        stroke-width="2"
+                                    >
+                                        <rect
+                                            width="20"
+                                            height="16"
+                                            x="2"
+                                            y="4"
+                                            rx="2"></rect>
+                                        <path
+                                            d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"
+                                        ></path>
+                                    </svg>
+                                </div>
+                            </div>
+                            <div
+                                class="custom-card-content messages-list-content"
+                            >
+                                {
+                                    allMessages.length === 0 ? (
+                                        <div class="empty-state">
+                                            <p>No messages yet</p>
+                                            <p style="font-size: 12px; margin-top: 0.5rem;">
+                                                Messages from your contact form
+                                                will appear here
+                                            </p>
+                                        </div>
+                                    ) : (
+                                        <div class="messages-list">
+                                            {allMessages.map((message) => (
+                                                <div
+                                                    class={`message-item ${!message.is_read ? "unread" : ""}`}
+                                                    data-message-id={message.id}
+                                                >
+                                                    <div class="message-header">
+                                                        <div class="message-sender">
+                                                            <div class="sender-name">
+                                                                {!message.is_read && (
+                                                                    <span class="unread-dot" />
+                                                                )}
+                                                                {message.name}
+                                                            </div>
+                                                            <div class="sender-email">
+                                                                {message.email}
+                                                            </div>
+                                                        </div>
+                                                        <div class="message-time">
+                                                            {new Date(
+                                                                message.created_at,
+                                                            ).toLocaleDateString(
+                                                                "en-US",
+                                                                {
+                                                                    month: "short",
+                                                                    day: "numeric",
+                                                                    hour: "2-digit",
+                                                                    minute: "2-digit",
+                                                                },
+                                                            )}
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="message-preview">
+                                                        {message.message}
+                                                    </div>
+
+                                                    <div class="message-full-content">
+                                                        <div class="message-full">
+                                                            {message.message}
+                                                        </div>
+                                                        <div class="message-actions">
+                                                            <button
+                                                                class="action-btn primary"
+                                                                onclick={`markAsRead('${message.id}', ${message.is_read})`}
+                                                            >
+                                                                {message.is_read
+                                                                    ? "Mark Unread"
+                                                                    : "Mark Read"}
+                                                            </button>
+                                                            <a
+                                                                href={`https://mail.google.com/mail/?view=cm&fs=1&to=${message.email}&su=Re: Contact from MindTree Portfolio&body=Hi ${message.name},%0A%0AThank you for reaching out!%0A%0A`}
+                                                                target="_blank"
+                                                                class="action-btn"
+                                                            >
+                                                                Reply via Gmail
+                                                            </a>
+                                                            <button
+                                                                class="action-btn danger"
+                                                                onclick={`deleteMessage('${message.id}')`}
+                                                            >
+                                                                Delete
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        import { supabase } from "../../lib/supabase";
+
+        // Toggle message expansion
+        document.querySelectorAll(".message-item").forEach((card) => {
+            card.addEventListener("click", (e) => {
+                // Don't expand if clicking on buttons or links
+                if (
+                    (e.target as HTMLElement).tagName === "BUTTON" ||
+                    (e.target as HTMLElement).tagName === "A"
+                ) {
+                    return;
+                }
+                card.classList.toggle("expanded");
+            });
+        });
+
+        // Mark as read/unread
+        window.markAsRead = async (id: string, currentStatus: boolean) => {
+            try {
+                const { error } = await supabase
+                    .from("messages")
+                    .update({ is_read: !currentStatus })
+                    .eq("id", id);
+
+                if (error) throw error;
+                window.location.reload();
+            } catch (error) {
+                console.error("Error updating message:", error);
+                alert("Failed to update message");
+            }
+        };
+
+        // Mark all as read
+        window.markAllAsRead = async () => {
+            if (!confirm("Mark all messages as read?")) return;
+
+            try {
+                const { error } = await supabase
+                    .from("messages")
+                    .update({ is_read: true })
+                    .eq("is_read", false);
+
+                if (error) throw error;
+                window.location.reload();
+            } catch (error) {
+                console.error("Error updating messages:", error);
+                alert("Failed to update messages");
+            }
+        };
+
+        // Delete message
+        window.deleteMessage = async (id: string) => {
+            if (!confirm("Are you sure you want to delete this message?"))
+                return;
+
+            try {
+                const { error } = await supabase
+                    .from("messages")
+                    .delete()
+                    .eq("id", id);
+
+                if (error) throw error;
+                window.location.reload();
+            } catch (error) {
+                console.error("Error deleting message:", error);
+                alert("Failed to delete message");
+            }
+        };
+
+        // Mouse glow effect
+        document
+            .querySelectorAll(".custom-bento-card--border-glow")
+            .forEach((card) => {
+                const cardElement = card as HTMLElement;
+
+                cardElement.addEventListener("mousemove", (e) => {
+                    const rect = cardElement.getBoundingClientRect();
+                    const x = ((e.clientX - rect.left) / rect.width) * 100;
+                    const y = ((e.clientY - rect.top) / rect.height) * 100;
+
+                    cardElement.style.setProperty("--glow-x", `${x}%`);
+                    cardElement.style.setProperty("--glow-y", `${y}%`);
+                    cardElement.style.setProperty("--glow-intensity", "1");
+                });
+
+                cardElement.addEventListener("mouseleave", () => {
+                    cardElement.style.setProperty("--glow-intensity", "0");
+                });
+            });
+    </script>
+</PanelLayout>
