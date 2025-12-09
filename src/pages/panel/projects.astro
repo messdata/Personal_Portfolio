@@ -6,6 +6,8 @@ import Particles from "../../components/welcome/Particles";
 import { supabase } from "../../lib/supabase";
 
 // Fetch all projects from Supabase
+let allProjects: any[] = [];
+
 if (supabase) {
   const { data: projects, error } = await supabase
     .from("projects")
