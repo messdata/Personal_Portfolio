@@ -91,17 +91,16 @@ if (DEMO_MODE) {
   
 } else {
   // REAL DATA FROM SUPABASE
-  const { data: analytics, error } = await supabase
-    .from('analytics')
-    .select('*')
-    .gte('viewed_at', startDate.toISOString())
-    .lte('viewed_at', endDate.toISOString())
-    .order('viewed_at', { ascending: true });
+  let allAnalytics: any[] = [];
 
-  allAnalytics = analytics || [];
-  totalViews = allAnalytics.length;
-  uniqueVisitors = new Set(allAnalytics.map(a => a.visitor_id)).size;
-
+if (supabase) {
+    const { data: analytics, error } = await supabase
+        .from("analytics")
+        .select("*")
+        .order("viewed_at", { ascending: false });
+    
+    allAnalytics = analytics || [];
+}
   // Top pages
   const pageCounts = allAnalytics.reduce((acc, curr) => {
     acc[curr.page_path] = (acc[curr.page_path] || 0) + 1;
