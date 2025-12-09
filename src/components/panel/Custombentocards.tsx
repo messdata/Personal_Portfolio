@@ -146,7 +146,7 @@ const CustomBentoCards: React.FC<CustomBentoCardsProps> = ({
 
   // Realtime subscription for messages
   useEffect(() => {
-    const messagesChannel = supabase
+   if (!supabase) return;
       .channel('messages-changes')
       .on(
         'postgres_changes',
@@ -168,7 +168,7 @@ const CustomBentoCards: React.FC<CustomBentoCardsProps> = ({
 
   // Realtime subscription for analytics
   useEffect(() => {
-    const analyticsChannel = supabase
+    if (!supabase) return;
       .channel('analytics-changes')
       .on(
         'postgres_changes',
@@ -237,7 +237,7 @@ const CustomBentoCards: React.FC<CustomBentoCardsProps> = ({
 
   // Realtime subscription for media
   useEffect(() => {
-    const mediaChannel = supabase
+    if (!supabase) return;
       .channel('media-changes')
       .on(
         'postgres_changes',
