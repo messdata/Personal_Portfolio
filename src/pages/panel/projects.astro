@@ -7,6 +7,9 @@ import { supabase } from "../../lib/supabase";
 
 // Fetch all projects from Supabase
 let allProjects: any[] = [];
+let visibleProjects: any[] = [];
+let draftProjects: any[] = [];
+
 
 if (supabase) {
   const { data: projects, error } = await supabase
@@ -16,7 +19,7 @@ if (supabase) {
 
   allProjects = projects || [];
 visibleProjects = allProjects.filter(p => p.visible);
-
+draftProjects = allProjects.filter(p => !p.visible);
 }
 ---
 
