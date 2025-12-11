@@ -1,236 +1,346 @@
 ---
-// src/components/panel/PillNavbar.astro
-interface Props {
-  activePage: 'dashboard' | 'messages' | 'projects' | 'analytics' | 'media';
-}
-
-const { activePage } = Astro.props;
+// PillNavbar.astro - Fixed for Astro
 ---
 
-<style>
-  .pill-navbar {
-    position: fixed;
-    top: 1.5rem;
-    left: 50%;
-    transform: translateX(-50%) translateY(0);
-    z-index: 1000;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    background: rgba(255, 255, 255, 0.03);
-    backdrop-filter: blur(20px);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: 50px;
-    padding: 0.5rem;
-    transition: transform 0.3s ease, opacity 0.3s ease;
-  }
+<div class="sidebar-container">
+  <!-- Hamburger Toggle Button -->
+  <button class="hamburger-btn" id="hamburger" aria-label="Toggle menu">
+    <svg
+      class="menu-icon-open"
+      width="24"
+      height="24"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="2"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+    >
+      <line x1="3" y1="12" x2="21" y2="12"></line>
+      <line x1="3" y1="6" x2="21" y2="6"></line>
+      <line x1="3" y1="18" x2="21" y2="18"></line>
+    </svg>
+    <svg
+      class="menu-icon-close"
+      width="24"
+      height="24"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="2"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+    >
+      <line x1="18" y1="6" x2="6" y2="18"></line>
+      <line x1="6" y1="6" x2="18" y2="18"></line>
+    </svg>
+  </button>
 
-  .pill-navbar.hidden {
-    transform: translateX(-50%) translateY(-150%);
-  }
+  <!-- Overlay Background -->
+  <div class="overlay" id="overlay"></div>
 
-  .pill-nav-item {
-    padding: 0.625rem 1.25rem;
-    background: transparent;
-    border: 1px solid transparent;
-    border-radius: 50px;
-    color: rgba(255, 255, 255, 0.6);
-    text-decoration: none;
-    font-size: 0.875rem;
-    font-weight: 500;
-    transition: all 0.2s ease;
-    cursor: pointer;
-    white-space: nowrap;
-  }
+  <!-- Sidebar -->
+  <nav class="sidebar" id="sidebar">
+    <div class="sidebar-content">
+      <!-- Main Navigation Links -->
+      <div class="nav-links">
+        <div class="nav-links">
+          <a href="/panel/" class="nav-link">
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <rect x="3" y="3" width="7" height="7"></rect>
+              <rect x="14" y="3" width="7" height="7"></rect>
+              <rect x="14" y="14" width="7" height="7"></rect>
+              <rect x="3" y="14" width="7" height="7"></rect>
+            </svg>
+            <span>Dashboard</span>
+          </a>
+          <a href="/panel/messages" class="nav-link">
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <path
+                d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"
+              ></path>
+            </svg>
+            <span>Messages</span>
+          </a>
+          <a href="/panel/projects" class="nav-link">
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <path
+                d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"
+              ></path>
+            </svg>
+            <span>Projects</span>
+          </a>
+          <a href="/panel/analytics" class="nav-link">
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <line x1="18" y1="20" x2="18" y2="10"></line>
+              <line x1="12" y1="20" x2="12" y2="4"></line>
+              <line x1="6" y1="20" x2="6" y2="14"></line>
+            </svg>
+            <span>Analytics</span>
+          </a>
+          <a href="/panel/media" class="nav-link">
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+              <circle cx="8.5" cy="8.5" r="1.5"></circle>
+              <polyline points="21 15 16 10 5 21"></polyline>
+            </svg>
+            <span>Media</span>
+          </a>
+        </div>
 
-  .pill-nav-item:hover {
-    background: rgba(255, 255, 255, 0.05);
-    color: rgba(255, 255, 255, 0.9);
-  }
+        <!-- Bottom Actions -->
+        <div class="bottom-actions">
+          <a href="/" class="action-link">
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <circle cx="12" cy="12" r="10"></circle>
+              <line x1="2" y1="12" x2="22" y2="12"></line>
+              <path
+                d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"
+              ></path>
+            </svg>
+            <span>Live Site</span>
+          </a>
+          <button class="action-link logout-btn" id="logoutBtn">
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+              <polyline points="16 17 21 12 16 7"></polyline>
+              <line x1="21" y1="12" x2="9" y2="12"></line>
+            </svg>
+            <span>Logout</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </nav>
 
-  .pill-nav-item.active {
-    background: rgba(139, 92, 246, 0.15);
-    border-color: rgba(139, 92, 246, 0.3);
-    color: #8b5cf6;
-  }
+  <style>
+    .sidebar-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      z-index: 9999;
+    }
 
-  .pill-nav-divider {
-    width: 1px;
-    height: 20px;
-    background: rgba(255, 255, 255, 0.1);
-  }
-
-  .pill-nav-item.logout {
-    border-color: rgba(239, 68, 68, 0.2);
-    color: rgba(239, 68, 68, 0.8);
-  }
-
-  .pill-nav-item.logout:hover {
-    background: rgba(239, 68, 68, 0.1);
-    border-color: rgba(239, 68, 68, 0.4);
-    color: #ef4444;
-  }
-
-  /* Tablet breakpoint */
-  @media (max-width: 768px) {
-    .pill-navbar {
-      top: 1rem;
-      left: 1rem;
-      right: 1rem;
-      transform: translateX(0) translateY(0);
-      flex-wrap: wrap;
+    /* Hamburger Button */
+    .hamburger-btn {
+      position: fixed;
+      top: 20px;
+      left: 20px;
+      width: 50px;
+      height: 50px;
+      background: rgba(13, 13, 13, 0.05);
+      backdrop-filter: blur(10px);
+      /* border: 1px solid rgba(255, 255, 255, 0.1); */
+      border-radius: 12px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
       justify-content: center;
-      max-width: calc(100% - 2rem);
-      padding: 0.4rem;
-      gap: 0.35rem;
+      z-index: 10001;
+      transition: all 0.3s ease;
+      color: white;
     }
 
-    .pill-navbar.hidden {
-      transform: translateX(0) translateY(-150%);
+    .hamburger-btn:hover {
+      background: rgba(255, 255, 255, 0.1);
+      border-color: rgba(139, 92, 246, 0.5);
     }
 
-    .pill-nav-item {
-      padding: 0.5rem 0.9rem;
-      font-size: 0.75rem;
-    }
-
-    .pill-nav-divider {
+    .menu-icon-close {
       display: none;
     }
-  }
 
-  /* Mobile breakpoint */
-  @media (max-width: 480px) {
-    .pill-navbar {
-      top: 0.75rem;
-      left: 0.5rem;
-      right: 0.5rem;
-      max-width: calc(100% - 1rem);
-      padding: 0.35rem;
-      gap: 0.25rem;
-      border-radius: 20px;
+    .hamburger-btn.active .menu-icon-open {
+      display: none;
     }
 
-    .pill-nav-item {
-      padding: 0.4rem 0.6rem;
-      font-size: 0.65rem;
-      border-radius: 12px;
+    .hamburger-btn.active .menu-icon-close {
+      display: block;
     }
 
-    .pill-nav-item.logout {
-      padding: 0.4rem 0.5rem;
-    }
-  }
-</style>
-
-<nav class="pill-navbar" id="pillNavbar">
-  <a
-    href="/panel"
-    class:list={['pill-nav-item', { active: activePage === 'dashboard' }]}
-    >Dashboard</a
-  >
-  <a
-    href="/panel/messages"
-    class:list={['pill-nav-item', { active: activePage === 'messages' }]}
-    >Messages</a
-  >
-  <a
-    href="/panel/projects"
-    class:list={['pill-nav-item', { active: activePage === 'projects' }]}
-    >Projects</a
-  >
-  <a
-    href="/panel/analytics"
-    class:list={['pill-nav-item', { active: activePage === 'analytics' }]}
-    >Analytics</a
-  >
-  <a
-    href="/panel/media"
-    class:list={['pill-nav-item', { active: activePage === 'media' }]}
-    >Media</a
-  >
-  <div class="pill-nav-divider"></div>
-  <a
-    href="/"
-    class="pill-nav-item"
-    onclick="sessionStorage.setItem('skipIntro', 'true')">Live Site</a
-  >
-  <button class="pill-nav-item logout" id="logoutBtn">Logout</button>
-</nav>
-
-<script>
-  // Logout functionality
-  document.getElementById('logoutBtn')?.addEventListener('click', () => {
-    sessionStorage.removeItem('panel_unlocked');
-    window.location.href = '/panel';
-  });
-
-  // Scroll show/hide navbar
-  let lastScrollY = 0;
-  let ticking = false;
-
-  function updateNavbar() {
-    const navbar = document.getElementById('pillNavbar');
-    if (!navbar) return;
-
-    const currentScrollY = window.scrollY;
-    const scrollThreshold = 50; // Start hiding after 50px scroll
-
-    if (currentScrollY > lastScrollY && currentScrollY > scrollThreshold) {
-      // Scrolling down - hide navbar
-      navbar.classList.add('hidden');
-    } else {
-      // Scrolling up or at top - show navbar
-      navbar.classList.remove('hidden');
+    /* Overlay */
+    .overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.471);
+      backdrop-filter: blur(5px);
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.3s ease;
+      z-index: 10000;
     }
 
-    lastScrollY = currentScrollY;
-    ticking = false;
-  }
-
-  // Find the scrollable container (panel content has overflow)
-  function getScrollContainer() {
-    // Try to find the main scrollable container
-    const panelContent = document.querySelector('.panel-content');
-    const mainContent = document.querySelector('main');
-    const body = document.body;
-    
-    // Check which element is actually scrollable
-    if (panelContent && panelContent.scrollHeight > panelContent.clientHeight) {
-      return panelContent;
+    .overlay.active {
+      opacity: 1;
+      visibility: visible;
     }
-    if (mainContent && mainContent.scrollHeight > mainContent.clientHeight) {
-      return mainContent;
-    }
-    return window;
-  }
 
-  document.addEventListener('DOMContentLoaded', () => {
-    const scrollContainer = getScrollContainer();
-    
-    const handleScroll = () => {
-      if (!ticking) {
-        window.requestAnimationFrame(() => {
-          // Get scroll position from the right source
-          if (scrollContainer === window) {
-            lastScrollY = window.scrollY;
-          } else {
-            lastScrollY = (scrollContainer as HTMLElement).scrollTop;
-          }
-          updateNavbar();
-        });
-        ticking = true;
+    /* Sidebar */
+    .sidebar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 280px;
+      height: 100vh;
+      background: rgba(0, 5, 14, 0.07);
+      backdrop-filter: blur(20px);
+      border-right: 1px solid rgba(255, 255, 255, 0.1);
+      transform: translateX(-100%);
+      transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      z-index: 10002;
+      overflow-y: auto;
+    }
+
+    .sidebar.active {
+      transform: translateX(0);
+    }
+
+    .sidebar-content {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      padding: 90px 20px 30px;
+    }
+
+    /* Navigation Links */
+    .nav-links {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      flex: 1;
+    }
+
+    .nav-link,
+    .action-link {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 16px;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 10px;
+      color: rgba(255, 255, 255, 0.8);
+      text-decoration: none;
+      font-size: 15px;
+      font-weight: 400;
+      transition: all 0.2s ease;
+      cursor: pointer;
+      width: 100%;
+    }
+
+    .nav-link:hover,
+    .action-link:hover {
+      background: rgba(255, 255, 255, 0.08);
+      border-color: rgba(139, 92, 246, 0.4);
+      color: white;
+      transform: translateX(4px);
+    }
+
+    /* Bottom Actions */
+    .bottom-actions {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-top: auto;
+      padding-top: 20px;
+      border-top: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .logout-btn {
+      background: rgba(239, 68, 68, 0.08);
+      border-color: rgba(239, 68, 68, 0.2);
+      color: rgba(252, 165, 165, 0.9);
+    }
+
+    .logout-btn:hover {
+      background: rgba(239, 68, 68, 0.15);
+      border-color: rgba(239, 68, 68, 0.4);
+      color: #fca5a5;
+    }
+
+    @media (max-width: 768px) {
+      .sidebar {
+        width: 80vw;
+        max-width: 320px;
       }
-    };
+    }
+  </style>
 
-    // Listen to scroll on the container
-    if (scrollContainer === window) {
-      window.addEventListener('scroll', handleScroll, { passive: true });
-    } else {
-      (scrollContainer as HTMLElement).addEventListener('scroll', handleScroll, { passive: true });
+  <script>
+    const hamburger = document.getElementById("hamburger");
+    const sidebar = document.getElementById("sidebar");
+    const overlay = document.getElementById("overlay");
+    const logoutBtn = document.getElementById("logoutBtn");
+
+    function toggleSidebar() {
+      hamburger?.classList.toggle("active");
+      sidebar?.classList.toggle("active");
+      overlay?.classList.toggle("active");
     }
 
-    // Also listen to window scroll as fallback
-    window.addEventListener('scroll', handleScroll, { passive: true });
-  });
-</script>
+    hamburger?.addEventListener("click", toggleSidebar);
+    overlay?.addEventListener("click", toggleSidebar);
+
+    const navLinks = document.querySelectorAll(".nav-link");
+    navLinks.forEach((link) => {
+      link.addEventListener("click", toggleSidebar);
+    });
+
+    logoutBtn?.addEventListener("click", () => {
+      sessionStorage.removeItem("panelUnlocked");
+      window.location.href = "/";
+    });
+  </script>
+</div>
