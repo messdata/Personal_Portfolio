@@ -5,6 +5,7 @@ import Particles from "../../components/welcome/Particles";
 import CustomBentoCards from "../../components/panel/Custombentocards";
 import { TreePalm } from "@lucide/astro";
 import { supabase } from "../../lib/supabase";
+import PillNavbar from "../../components/panel/PillNavbar.astro";
 
 // Fetch Dashboard data
 const { data: projects } = await supabase
@@ -301,7 +302,7 @@ function formatTimeAgo(timestamp: string): string {
     />
   </div>
 
-  <!-- Pill Navigation Bar -->
+  <!-- Pill Navigation Bar 
   <nav class="pill-navbar">
     <a href="/panel" class="pill-nav-item active">Dashboard</a>
     <a href="/panel/messages" class="pill-nav-item">Messages</a>
@@ -315,7 +316,9 @@ function formatTimeAgo(timestamp: string): string {
       onclick="sessionStorage.setItem('skipIntro', 'true')">Live Site</a
     >
     <button class="pill-nav-item logout" id="logoutBtn">Logout</button>
-  </nav>
+  </nav> -->
+
+ <PillNavbar activePage="dashboard" />
 
   <!-- Main Panel Container -->
   <main class="panel-container">
