@@ -387,112 +387,106 @@ const { title } = Astro.props;
     </div>
 
     <script>
-      import { createClient } from "@supabase/supabase-js";
+  import { supabase } from "../../lib/supabase";
 
-      // Initialize Supabase client
-      const supabaseUrl = import.meta.env.PUBLIC_SUPABASE_URL;
-      const supabaseKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
-      const supabase = createClient(supabaseUrl, supabaseKey);
+  // Check if user is already authenticated
+  async function checkAuth() {
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
 
-      // Check if user is already authenticated
-      async function checkAuth() {
-        const {
-          data: { session },
-        } = await supabase.auth.getSession();
+    if (session) {
+      hideAuthScreen();
+    }
+  }
 
-        if (session) {
-          // User is authenticated
-          hideAuthScreen();
-        }
-      }
+  // Hide auth screen and show panel
+  function hideAuthScreen() {
+    const authScreen = document.getElementById("auth-screen");
+    const panelContent = document.getElementById("panel-content");
 
-      // Hide auth screen and show panel
-      function hideAuthScreen() {
-        const authScreen = document.getElementById("auth-screen");
-        const panelContent = document.getElementById("panel-content");
+    if (authScreen) authScreen.classList.add("hidden");
+    if (panelContent) panelContent.style.display = "block";
+  }
 
-        if (authScreen) authScreen.classList.add("hidden");
-        if (panelContent) panelContent.style.display = "block";
-      }
+  // Tree button click - show modal
+  const treeButton = document.getElementById("treeButton");
+  const authModal = document.getElementById("authModal");
+  const modalOverlay = document.getElementById("modalOverlay");
 
-      // Tree button click - show modal
-      const treeButton = document.getElementById("treeButton");
-      const authModal = document.getElementById("authModal");
-      const modalOverlay = document.getElementById("modalOverlay");
+  treeButton?.addEventListener("click", () => {
+    authModal?.classList.add("active");
+    modalOverlay?.classList.add("active");
+  });
 
-      treeButton?.addEventListener("click", () => {
-        authModal?.classList.add("active");
-        modalOverlay?.classList.add("active");
-      });
+  // Close modal on overlay click
+  modalOverlay?.addEventListener("click", () => {
+    authModal?.classList.remove("active");
+    modalOverlay?.classList.remove("active");
+  });
 
-      // Close modal on overlay click
-      modalOverlay?.addEventListener("click", () => {
-        authModal?.classList.remove("active");
-        modalOverlay?.classList.remove("active");
-      });
+  // Google OAuth
+  const googleBtn = document.getElementById("googleBtn");
+  googleBtn?.addEventListener("click", async () => {
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: {
+        redirectTo: `${window.location.origin}/panel`,
+      },
+    });
 
-      // Google OAuth
-      const googleBtn = document.getElementById("googleBtn");
-      googleBtn?.addEventListener("click", async () => {
-        const { error } = await supabase.auth.signInWithOAuth({
-          provider: "google",
-          options: {
-            redirectTo: `${window.location.origin}/panel`,
-          },
-        });
+    if (error) console.error("Google sign-in error:", error);
+  });
 
-        if (error) console.error("Google sign-in error:", error);
-      });
+  // GitHub OAuth
+  const githubBtn = document.getElementById("githubBtn");
+  githubBtn?.addEventListener("click", async () => {
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: "github",
+      options: {
+        redirectTo: `${window.location.origin}/panel`,
+      },
+    });
 
-      // GitHub OAuth
-      const githubBtn = document.getElementById("githubBtn");
-      githubBtn?.addEventListener("click", async () => {
-        const { error } = await supabase.auth.signInWithOAuth({
-          provider: "github",
-          options: {
-            redirectTo: `${window.location.origin}/panel`,
-          },
-        });
+    if (error) console.error("GitHub sign-in error:", error);
+  });
 
-        if (error) console.error("GitHub sign-in error:", error);
-      });
+  // Check auth on page load
+  checkAuth();
 
-      // Check auth on page load
-      checkAuth();
+  // Listen for auth state changes
+  supabase.auth.onAuthStateChange((event, session) => {
+    if (event === "SIGNED_IN" && session) {
+      hideAuthScreen();
+    } else if (event === "SIGNED_OUT") {
+      window.location.href = "/panel";
+    }
+  });
 
-      // Listen for auth state changes
-      supabase.auth.onAuthStateChange((event, session) => {
-        if (event === "SIGNED_IN" && session) {
-          hideAuthScreen();
-        } else if (event === "SIGNED_OUT") {
-          window.location.href = "/panel";
-        }
-      });
+  // Hamburger Menu Toggle
+  document.addEventListener("DOMContentLoaded", () => {
+    const menuIcon = document.querySelector(".menu-icon");
+    const nav = document.querySelector(".nav");
+    const overlay = document.getElementById("navOverlay");
 
-      // Hamburger Menu Toggle
-      document.addEventListener("DOMContentLoaded", () => {
-        const menuIcon = document.querySelector(".menu-icon");
-        const nav = document.querySelector(".nav");
-        const overlay = document.getElementById("navOverlay");
+    menuIcon?.addEventListener("click", () => {
+      menuIcon.classList.toggle("active");
+      nav?.classList.toggle("active");
+      overlay?.classList.toggle("active");
+    });
 
-        menuIcon?.addEventListener("click", () => {
-          menuIcon.classList.toggle("active");
-          nav?.classList.toggle("active");
-          overlay?.classList.toggle("active");
-        });
+    overlay?.addEventListener("click", () => {
+      menuIcon?.classList.remove("active");
+      nav?.classList.remove("active");
+      overlay?.classList.remove("active");
+    });
 
-        overlay?.addEventListener("click", () => {
-          menuIcon?.classList.remove("active");
-          nav?.classList.remove("active");
-          overlay?.classList.remove("active");
-        });
-
-        // Logout functionality
-        const logoutBtn = document.querySelector(".logout-btn");
-        logoutBtn?.addEventListener("click", async () => {
-          await supabase.auth.signOut();
-        });
-      });
-    </script>
+    // Logout functionality
+    const logoutBtn = document.querySelector(".logout-btn");
+    logoutBtn?.addEventListener("click", async () => {
+      await supabase.auth.signOut();
+    });
+  });
+</script>
   </body>
 </html>
