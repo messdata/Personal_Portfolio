@@ -1,4 +1,17 @@
+import { createClient } from '@supabase/supabase-js';
 
+const supabaseUrl = import.meta.env.PUBLIC_SUPABASE_URL;
+const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
+
+// Only validate and create client if we're not in build mode or if vars are present
+let supabaseClient: ReturnType<typeof createClient> | null = null;
+
+if (supabaseUrl && supabaseAnonKey) {
+  supabaseClient = createClient(supabaseUrl, supabaseAnonKey);
+} else if (typeof window !== 'undefined') {
+  // Only throw error in browser, not during build
+  console.error('Missing Supabase environment variables');
+}
 
 // Type definitions for your database
 export interface Project {
