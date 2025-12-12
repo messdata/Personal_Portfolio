@@ -370,12 +370,4 @@ function formatTimeAgo(timestamp: string): string {
       </div>
     </section>
   </main>
-
-  <script>
-    // Logout
-    document.getElementById("logoutBtn")?.addEventListener("click", () => {
-      sessionStorage.removeItem("panel_unlocked");
-      window.location.href = "/panel";
-    });
-  </script>
 </PanelLayout>
