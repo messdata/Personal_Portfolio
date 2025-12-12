@@ -1,7 +1,6 @@
 ---
 // src/components/panel/Layout/PanelLayout.astro
 import { TreePalm } from "@lucide/astro";
-import PillNavbar from "/Users/chinmaypatil/Desktop/Resume Docs/WebPage/mindtree_II/src/components/panel/PillNavbar.astro";
 
 interface Props {
   title: string;
@@ -16,9 +15,6 @@ const { title } = Astro.props;
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>{title}</title>
-    <link rel="stylesheet" href="/src/styles/panel.css" />
-    <link rel="stylesheet" href="/src/styles/panel-menu.css" />
-    <link rel="stylesheet" href="/src/styles/panel-dashboard.css" />
     <style>
       /* Auth Screen Styles */
       #auth-screen {
@@ -29,12 +25,13 @@ const { title } = Astro.props;
         align-items: center;
         justify-content: center;
         z-index: 999999;
-        transition: opacity 0.5s ease;
+        transition: opacity 0.5s ease, visibility 0.5s ease;
       }
 
       #auth-screen.hidden {
         opacity: 0;
-        
+        visibility: hidden;
+        pointer-events: none;
       }
 
       /* Ripple Loader Background */
@@ -174,11 +171,9 @@ const { title } = Astro.props;
 
       .modal-content {
         background: rgba(165, 157, 206, 0);
-        /* border-radius: 16px; */
         box-shadow: 0 4px 30px rgba(9, 9, 9, 0.093);
         backdrop-filter: blur(5px);
         -webkit-backdrop-filter: blur(5px);
-        /* //border: 1px solid rgba(106, 85, 209, 0); */
         padding: 2.5rem 2rem;
         min-width: 320px;
         text-align: center;
@@ -224,6 +219,12 @@ const { title } = Astro.props;
 
       .oauth-btn:active {
         transform: translateY(-2px);
+      }
+
+      .oauth-btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+        transform: none;
       }
 
       .oauth-btn svg,
@@ -289,25 +290,6 @@ const { title } = Astro.props;
           height: 35px;
         }
       }
-
-      /* Panel content wrapper
-      #panel-content {
-        padding-top: 2rem;
-        min-height: 100vh;
-        background: #06001000;
-      }
-
-      @media (max-width: 768px) {
-        #panel-content {
-          padding-top: 6rem;
-        }
-      }
-
-      @media (max-width: 480px) {
-        #panel-content {
-          padding-top: 5.5rem;
-        }
-      } */
     </style>
   </head>
   <body>
@@ -323,7 +305,7 @@ const { title } = Astro.props;
       </div>
 
       <!-- Tree Button -->
-      <button class="tree-button" id="treeButton">
+      <button class="tree-button" id="treeButton" aria-label="Sign in">
         <TreePalm size={48} />
       </button>
 
@@ -387,106 +369,206 @@ const { title } = Astro.props;
     </div>
 
     <script>
-  import { supabase } from "../../../lib/supabase";
+      import { supabase } from "../../lib/supabase";
 
-  // Check if user is already authenticated
-  async function checkAuth() {
-    const {
-      data: { session },
-    } = await supabase.auth.getSession();
+      // State management
+      let isAuthenticating = false;
 
-    if (session) {
-      hideAuthScreen();
-    }
-  }
+      // Check if user is already authenticated
+      async function checkAuth() {
+        try {
+          // Check for OAuth callback hash
+          if (window.location.hash) {
+            console.log("📍 OAuth callback detected, processing...");
+          }
 
-  // Hide auth screen and show panel
-  function hideAuthScreen() {
-    const authScreen = document.getElementById("auth-screen");
-    const panelContent = document.getElementById("panel-content");
+          const {
+            data: { session },
+            error,
+          } = await supabase.auth.getSession();
 
-    if (authScreen) authScreen.classList.add("hidden");
-    if (panelContent) panelContent.style.display = "block";
-  }
+          if (error) {
+            console.error("❌ Session check error:", error);
+            return;
+          }
 
-  // Tree button click - show modal
-  const treeButton = document.getElementById("treeButton");
-  const authModal = document.getElementById("authModal");
-  const modalOverlay = document.getElementById("modalOverlay");
+          console.log("🔐 Session status:", session ? "Authenticated" : "Not authenticated");
 
-  treeButton?.addEventListener("click", () => {
-    authModal?.classList.add("active");
-    modalOverlay?.classList.add("active");
-  });
+          if (session) {
+            // Clean up URL hash after successful OAuth
+            if (window.location.hash) {
+              window.history.replaceState(
+                null,
+                "",
+                window.location.pathname + window.location.search
+              );
+            }
+            hideAuthScreen();
+          }
+        } catch (error) {
+          console.error("❌ Auth check failed:", error);
+        }
+      }
 
-  // Close modal on overlay click
-  modalOverlay?.addEventListener("click", () => {
-    authModal?.classList.remove("active");
-    modalOverlay?.classList.remove("active");
-  });
+      // Hide auth screen and show panel
+      function hideAuthScreen() {
+        const authScreen = document.getElementById("auth-screen");
+        const panelContent = document.getElementById("panel-content");
 
-  // Google OAuth
-  const googleBtn = document.getElementById("googleBtn");
-  googleBtn?.addEventListener("click", async () => {
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: "google",
-      options: {
-        redirectTo: `${window.location.origin}/panel`,
-      },
-    });
+        if (authScreen && panelContent) {
+          authScreen.classList.add("hidden");
+          
+          // Wait for transition before showing panel
+          setTimeout(() => {
+            panelContent.style.display = "block";
+            console.log("✅ Panel content displayed");
+          }, 500);
+        }
+      }
 
-    if (error) console.error("Google sign-in error:", error);
-  });
+      // Show auth screen
+      function showAuthScreen() {
+        const authScreen = document.getElementById("auth-screen");
+        const panelContent = document.getElementById("panel-content");
 
-  // GitHub OAuth
-  const githubBtn = document.getElementById("githubBtn");
-  githubBtn?.addEventListener("click", async () => {
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: "github",
-      options: {
-        redirectTo: `${window.location.origin}/panel`,
-      },
-    });
+        if (authScreen && panelContent) {
+          authScreen.classList.remove("hidden");
+          panelContent.style.display = "none";
+        }
+      }
 
-    if (error) console.error("GitHub sign-in error:", error);
-  });
+      // Tree button click - show modal
+      const treeButton = document.getElementById("treeButton");
+      const authModal = document.getElementById("authModal");
+      const modalOverlay = document.getElementById("modalOverlay");
 
-  // Check auth on page load
-  checkAuth();
+      treeButton?.addEventListener("click", () => {
+        authModal?.classList.add("active");
+        modalOverlay?.classList.add("active");
+      });
 
-  // Listen for auth state changes
-  supabase.auth.onAuthStateChange((event, session) => {
-    if (event === "SIGNED_IN" && session) {
-      hideAuthScreen();
-    } else if (event === "SIGNED_OUT") {
-      window.location.href = "/panel";
-    }
-  });
+      // Close modal on overlay click
+      modalOverlay?.addEventListener("click", () => {
+        authModal?.classList.remove("active");
+        modalOverlay?.classList.remove("active");
+      });
 
-  // Hamburger Menu Toggle
-  document.addEventListener("DOMContentLoaded", () => {
-    const menuIcon = document.querySelector(".menu-icon");
-    const nav = document.querySelector(".nav");
-    const overlay = document.getElementById("navOverlay");
+      // Google OAuth
+      const googleBtn = document.getElementById("googleBtn");
+      googleBtn?.addEventListener("click", async () => {
+        if (isAuthenticating) return;
+        
+        isAuthenticating = true;
+        googleBtn.disabled = true;
 
-    menuIcon?.addEventListener("click", () => {
-      menuIcon.classList.toggle("active");
-      nav?.classList.toggle("active");
-      overlay?.classList.toggle("active");
-    });
+        try {
+          console.log("🚀 Initiating Google OAuth...");
+          const { error } = await supabase.auth.signInWithOAuth({
+            provider: "google",
+            options: {
+              redirectTo: `${window.location.origin}/panel`,
+            },
+          });
 
-    overlay?.addEventListener("click", () => {
-      menuIcon?.classList.remove("active");
-      nav?.classList.remove("active");
-      overlay?.classList.remove("active");
-    });
+          if (error) {
+            console.error("❌ Google sign-in error:", error);
+            alert("Authentication failed. Please try again.");
+          }
+        } catch (error) {
+          console.error("❌ Google OAuth exception:", error);
+          alert("Authentication error. Please try again.");
+        } finally {
+          isAuthenticating = false;
+          googleBtn.disabled = false;
+        }
+      });
 
-    // Logout functionality
-    const logoutBtn = document.querySelector(".logout-btn");
-    logoutBtn?.addEventListener("click", async () => {
-      await supabase.auth.signOut();
-    });
-  });
-</script>
+      // GitHub OAuth
+      const githubBtn = document.getElementById("githubBtn");
+      githubBtn?.addEventListener("click", async () => {
+        if (isAuthenticating) return;
+        
+        isAuthenticating = true;
+        githubBtn.disabled = true;
+
+        try {
+          console.log("🚀 Initiating GitHub OAuth...");
+          const { error } = await supabase.auth.signInWithOAuth({
+            provider: "github",
+            options: {
+              redirectTo: `${window.location.origin}/panel`,
+            },
+          });
+
+          if (error) {
+            console.error("❌ GitHub sign-in error:", error);
+            alert("Authentication failed. Please try again.");
+          }
+        } catch (error) {
+          console.error("❌ GitHub OAuth exception:", error);
+          alert("Authentication error. Please try again.");
+        } finally {
+          isAuthenticating = false;
+          githubBtn.disabled = false;
+        }
+      });
+
+      // Listen for auth state changes
+      supabase.auth.onAuthStateChange((event, session) => {
+        console.log("🔄 Auth state changed:", event);
+
+        if (event === "SIGNED_IN" && session) {
+          console.log("✅ User signed in successfully");
+          hideAuthScreen();
+        } else if (event === "SIGNED_OUT") {
+          console.log("👋 User signed out");
+          showAuthScreen();
+        } else if (event === "TOKEN_REFRESHED") {
+          console.log("🔄 Token refreshed");
+        }
+      });
+
+      // Check auth on page load
+      checkAuth();
+
+      // Hamburger Menu Toggle (if you have one)
+      document.addEventListener("DOMContentLoaded", () => {
+        const menuIcon = document.querySelector(".menu-icon");
+        const nav = document.querySelector(".nav");
+        const overlay = document.getElementById("navOverlay");
+
+        menuIcon?.addEventListener("click", () => {
+          menuIcon.classList.toggle("active");
+          nav?.classList.toggle("active");
+          overlay?.classList.toggle("active");
+        });
+
+        overlay?.addEventListener("click", () => {
+          menuIcon?.classList.remove("active");
+          nav?.classList.remove("active");
+          overlay?.classList.remove("active");
+        });
+
+        // Logout functionality
+        const logoutBtn = document.querySelector(".logout-btn");
+        logoutBtn?.addEventListener("click", async () => {
+          try {
+            console.log("👋 Logging out...");
+            const { error } = await supabase.auth.signOut();
+            
+            if (error) {
+              console.error("❌ Logout error:", error);
+              alert("Logout failed. Please try again.");
+            } else {
+              // Redirect to panel page after logout
+              window.location.href = "/panel";
+            }
+          } catch (error) {
+            console.error("❌ Logout exception:", error);
+            alert("Logout error. Please try again.");
+          }
+        });
+      });
+    </script>
   </body>
 </html>
