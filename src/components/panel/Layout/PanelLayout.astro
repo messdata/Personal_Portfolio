@@ -390,8 +390,8 @@ const { title } = Astro.props;
       import { createClient } from "@supabase/supabase-js";
 
       // Initialize Supabase client
-      const supabaseUrl = import.meta.env.SUPABASE_URL;
-      const supabaseKey = import.meta.env.SUPABASE_ANON_KEY;
+      const supabaseUrl = import.meta.env.PUBLIC_SUPABASE_URL;
+      const supabaseKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
       const supabase = createClient(supabaseUrl, supabaseKey);
 
       // Check if user is already authenticated
