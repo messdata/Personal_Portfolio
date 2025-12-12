@@ -360,16 +360,13 @@ const { title } = Astro.props;
       </div>
     </div>
 
-    <!-- Navigation Overlay -->
-    <div class="nav-overlay" id="navOverlay"></div>
-
     <!-- Main Panel Content (Hidden until authenticated) -->
     <div id="panel-content" style="display: none;">
       <slot />
     </div>
 
     <script>
-      import { supabase } from "../../../lib/supabase";
+      import { supabase } from "../../lib/supabase";
 
       // State management
       let isAuthenticating = false;
@@ -377,6 +374,15 @@ const { title } = Astro.props;
       // Check if user is already authenticated
       async function checkAuth() {
         try {
+          // CRITICAL: Check if user just logged out
+          const justLoggedOut = sessionStorage.getItem("just_logged_out");
+          if (justLoggedOut) {
+            console.log("🚪 User just logged out, showing auth screen");
+            sessionStorage.removeItem("just_logged_out");
+            showAuthScreen();
+            return; // Stop here, don't proceed with session check
+          }
+
           // Check for OAuth callback hash
           if (window.location.hash) {
             console.log("📍 OAuth callback detected, processing...");
@@ -389,10 +395,14 @@ const { title } = Astro.props;
 
           if (error) {
             console.error("❌ Session check error:", error);
+            showAuthScreen();
             return;
           }
 
-          console.log("🔐 Session status:", session ? "Authenticated" : "Not authenticated");
+          console.log(
+            "🔐 Session status:",
+            session ? "Authenticated" : "Not authenticated",
+          );
 
           if (session) {
             // Clean up URL hash after successful OAuth
@@ -400,13 +410,16 @@ const { title } = Astro.props;
               window.history.replaceState(
                 null,
                 "",
-                window.location.pathname + window.location.search
+                window.location.pathname + window.location.search,
               );
             }
             hideAuthScreen();
+          } else {
+            showAuthScreen();
           }
         } catch (error) {
           console.error("❌ Auth check failed:", error);
+          showAuthScreen();
         }
       }
 
@@ -417,7 +430,7 @@ const { title } = Astro.props;
 
         if (authScreen && panelContent) {
           authScreen.classList.add("hidden");
-          
+
           // Wait for transition before showing panel
           setTimeout(() => {
             panelContent.style.display = "block";
@@ -434,6 +447,7 @@ const { title } = Astro.props;
         if (authScreen && panelContent) {
           authScreen.classList.remove("hidden");
           panelContent.style.display = "none";
+          console.log("🔒 Auth screen displayed");
         }
       }
 
@@ -457,7 +471,7 @@ const { title } = Astro.props;
       const googleBtn = document.getElementById("googleBtn");
       googleBtn?.addEventListener("click", async () => {
         if (isAuthenticating) return;
-        
+
         isAuthenticating = true;
         googleBtn.disabled = true;
 
@@ -487,7 +501,7 @@ const { title } = Astro.props;
       const githubBtn = document.getElementById("githubBtn");
       githubBtn?.addEventListener("click", async () => {
         if (isAuthenticating) return;
-        
+
         isAuthenticating = true;
         githubBtn.disabled = true;
 
@@ -517,12 +531,19 @@ const { title } = Astro.props;
       supabase.auth.onAuthStateChange((event, session) => {
         console.log("🔄 Auth state changed:", event);
 
-        if (event === "SIGNED_IN" && session) {
+        // Don't auto-redirect on SIGNED_OUT if user just manually logged out
+        if (event === "SIGNED_OUT") {
+          const justLoggedOut = sessionStorage.getItem("just_logged_out");
+          if (justLoggedOut) {
+            console.log("👋 Manual logout detected, staying on auth screen");
+            showAuthScreen();
+          } else {
+            console.log("👋 Session expired, redirecting...");
+            window.location.href = "/panel";
+          }
+        } else if (event === "SIGNED_IN" && session) {
           console.log("✅ User signed in successfully");
           hideAuthScreen();
-        } else if (event === "SIGNED_OUT") {
-          console.log("👋 User signed out");
-          showAuthScreen();
         } else if (event === "TOKEN_REFRESHED") {
           console.log("🔄 Token refreshed");
         }
@@ -530,45 +551,6 @@ const { title } = Astro.props;
 
       // Check auth on page load
       checkAuth();
-
-      // Hamburger Menu Toggle (if you have one)
-      document.addEventListener("DOMContentLoaded", () => {
-        const menuIcon = document.querySelector(".menu-icon");
-        const nav = document.querySelector(".nav");
-        const overlay = document.getElementById("navOverlay");
-
-        menuIcon?.addEventListener("click", () => {
-          menuIcon.classList.toggle("active");
-          nav?.classList.toggle("active");
-          overlay?.classList.toggle("active");
-        });
-
-        overlay?.addEventListener("click", () => {
-          menuIcon?.classList.remove("active");
-          nav?.classList.remove("active");
-          overlay?.classList.remove("active");
-        });
-
-        // Logout functionality
-        const logoutBtn = document.querySelector(".logout-btn");
-        logoutBtn?.addEventListener("click", async () => {
-          try {
-            console.log("👋 Logging out...");
-            const { error } = await supabase.auth.signOut();
-            
-            if (error) {
-              console.error("❌ Logout error:", error);
-              alert("Logout failed. Please try again.");
-            } else {
-              // Redirect to panel page after logout
-              window.location.href = "/panel";
-            }
-          } catch (error) {
-            console.error("❌ Logout exception:", error);
-            alert("Logout error. Please try again.");
-          }
-        });
-      });
     </script>
   </body>
 </html>
