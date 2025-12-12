@@ -153,15 +153,15 @@ const { title } = Astro.props;
 
       /* Auth Modal */
       .auth-modal {
-        position: fixed;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%) translateY(100px);
-        z-index: 100001;
-        opacity: 0;
-        pointer-events: none;
-        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-      }
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) scale(0.9); /* Slight zoom */
+  z-index: 100001;
+  opacity: 0;
+  pointer-events: none;
+  transition: all 0.3s ease; /* Faster, smoother */
+}
 
       .auth-modal.active {
         opacity: 1;
