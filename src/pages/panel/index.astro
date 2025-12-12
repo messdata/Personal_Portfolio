@@ -7,87 +7,104 @@ import { TreePalm } from "@lucide/astro";
 import { supabase } from "../../lib/supabase";
 import PillNavbar from "../../components/panel/PillNavbar.astro";
 
-// Fetch Dashboard data
-const { data: projects } = await supabase
-  .from("projects")
-  .select("id, visible");
-const { data: messages } = await supabase
-  .from("messages")
-  .select("id, is_read");
-const { data: analytics } = await supabase.from("analytics").select("id");
-const { data: media } = await supabase.from("media").select("id");
+// Check if user is authenticated on server side
+const { data: { session } } = await supabase.auth.getSession();
 
-// Calculate stats
-const totalProjects = projects?.length || 0;
-const visibleProjects = projects?.filter((p) => p.visible).length || 0;
-const totalMessages = messages?.length || 0;
-const unreadMessages = messages?.filter((m) => !m.is_read).length || 0;
-const totalViews = analytics?.length || 0;
-const totalMedia = media?.length || 0;
+// Initialize default values
+let totalProjects = 0;
+let visibleProjects = 0;
+let totalMessages = 0;
+let unreadMessages = 0;
+let totalViews = 0;
+let totalMedia = 0;
+let pageLiveDays = 0;
+let profileVisits = 0;
+let recentProjectViews = [];
 
-// Calculate page live days (launched October 2025)
-const launchDate = new Date("2025-10-01");
-const today = new Date();
-const pageLiveDays = Math.floor(
-  (today.getTime() - launchDate.getTime()) / (1000 * 60 * 60 * 24),
-);
+// Only fetch data if authenticated
+if (session) {
+  // Fetch Dashboard data
+  const { data: projects } = await supabase
+    .from("projects")
+    .select("id, visible");
+  const { data: messages } = await supabase
+    .from("messages")
+    .select("id, is_read");
+  const { data: analytics } = await supabase.from("analytics").select("id");
+  const { data: media } = await supabase.from("media").select("id");
 
-// Profile visits = total unique visitors
-const { data: uniqueVisitors } = await supabase
-  .from("analytics")
-  .select("visitor_id");
+  // Calculate stats
+  totalProjects = projects?.length || 0;
+  visibleProjects = projects?.filter((p) => p.visible).length || 0;
+  totalMessages = messages?.length || 0;
+  unreadMessages = messages?.filter((m) => !m.is_read).length || 0;
+  totalViews = analytics?.length || 0;
+  totalMedia = media?.length || 0;
 
-const profileVisits = uniqueVisitors
-  ? new Set(uniqueVisitors.map((v) => v.visitor_id)).size
-  : 0;
+  // Calculate page live days
+  const launchDate = new Date("2025-10-01");
+  const today = new Date();
+  pageLiveDays = Math.floor(
+    (today.getTime() - launchDate.getTime()) / (1000 * 60 * 60 * 24),
+  );
 
-// Fetch recent project views
-const { data: projectAnalytics } = await supabase
-  .from("analytics")
-  .select("page_path, viewed_at, event_type")
-  .ilike("page_path", "%/project%")
-  .eq("event_type", "page_view")
-  .order("viewed_at", { ascending: false })
-  .limit(50);
+  // Profile visits
+  const { data: uniqueVisitors } = await supabase
+    .from("analytics")
+    .select("visitor_id");
 
-// Transform analytics data
-const projectViewsMap = new Map();
+  profileVisits = uniqueVisitors
+    ? new Set(uniqueVisitors.map((v) => v.visitor_id)).size
+    : 0;
 
-if (projectAnalytics) {
-  projectAnalytics.forEach((entry) => {
-    const pathParts = entry.page_path.split("/");
-    const projectSlug = pathParts[pathParts.length - 1] || "Unknown";
-    const projectName = projectSlug
-      .split("-")
-      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-      .join(" ");
+  // Fetch recent project views
+  const { data: projectAnalytics } = await supabase
+    .from("analytics")
+    .select("page_path, viewed_at, event_type")
+    .ilike("page_path", "%/project%")
+    .eq("event_type", "page_view")
+    .order("viewed_at", { ascending: false })
+    .limit(50);
 
-    if (projectViewsMap.has(projectName)) {
-      const existing = projectViewsMap.get(projectName);
-      existing.view_count += 1;
-      if (new Date(entry.viewed_at) > new Date(existing.last_viewed_raw)) {
-        existing.last_viewed_raw = entry.viewed_at;
-        existing.last_viewed = formatTimeAgo(entry.viewed_at);
+  // Transform analytics data
+  const projectViewsMap = new Map();
+
+  if (projectAnalytics) {
+    projectAnalytics.forEach((entry) => {
+      const pathParts = entry.page_path.split("/");
+      const projectSlug = pathParts[pathParts.length - 1] || "Unknown";
+      const projectName = projectSlug
+        .split("-")
+        .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+        .join(" ");
+
+      if (projectViewsMap.has(projectName)) {
+        const existing = projectViewsMap.get(projectName);
+        existing.view_count += 1;
+        if (new Date(entry.viewed_at) > new Date(existing.last_viewed_raw)) {
+          existing.last_viewed_raw = entry.viewed_at;
+          existing.last_viewed = formatTimeAgo(entry.viewed_at);
+        }
+      } else {
+        projectViewsMap.set(projectName, {
+          project_name: projectName,
+          view_count: 1,
+          last_viewed: formatTimeAgo(entry.viewed_at),
+          last_viewed_raw: entry.viewed_at,
+        });
       }
-    } else {
-      projectViewsMap.set(projectName, {
-        project_name: projectName,
-        view_count: 1,
-        last_viewed: formatTimeAgo(entry.viewed_at),
-        last_viewed_raw: entry.viewed_at,
-      });
-    }
-  });
-}
+    });
+  }
 
-const recentProjectViews = Array.from(projectViewsMap.values())
-  .sort(
-    (a, b) =>
-      new Date(b.last_viewed_raw).getTime() -
-      new Date(a.last_viewed_raw).getTime(),
-  )
-  .slice(0, 5)
-  .map(({ last_viewed_raw, ...rest }) => rest);
+  recentProjectViews = Array.from(projectViewsMap.values())
+    .sort(
+      (a, b) =>
+        new Date(b.last_viewed_raw).getTime() -
+        new Date(a.last_viewed_raw).getTime(),
+    )
+    .slice(0, 5)
+    .map(({ last_viewed_raw, ...rest }) => rest);
+}
 
 function formatTimeAgo(timestamp: string): string {
   const now = new Date();
