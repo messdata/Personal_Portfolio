@@ -8,7 +8,9 @@ import { supabase } from "../../lib/supabase";
 import PillNavbar from "../../components/panel/PillNavbar.astro";
 
 // Check if user is authenticated on server side
-const { data: { session } } = await supabase.auth.getSession();
+const {
+  data: { session },
+} = await supabase.auth.getSession();
 
 // Initialize default values
 let totalProjects = 0;
@@ -20,6 +22,19 @@ let totalMedia = 0;
 let pageLiveDays = 0;
 let profileVisits = 0;
 let recentProjectViews = [];
+
+// Calculate page live days (ALWAYS - doesn't need authentication)
+const launchDate = new Date("2025-10-01T00:00:00");
+const today = new Date();
+
+pageLiveDays = Math.floor(
+  (today.getTime() - launchDate.getTime()) / (1000 * 60 * 60 * 24),
+);
+
+console.log("🗓️ Launch Date:", launchDate);
+console.log("📅 Today:", today);
+console.log("📊 Page Live Days:", pageLiveDays);
+console.log("⏰ Time Diff (ms):", today.getTime() - launchDate.getTime());
 
 // Only fetch data if authenticated
 if (session) {
@@ -40,13 +55,6 @@ if (session) {
   unreadMessages = messages?.filter((m) => !m.is_read).length || 0;
   totalViews = analytics?.length || 0;
   totalMedia = media?.length || 0;
-
-  // Calculate page live days
-  const launchDate = new Date("2025-10-01");
-  const today = new Date();
-  pageLiveDays = Math.floor(
-    (today.getTime() - launchDate.getTime()) / (1000 * 60 * 60 * 24),
-  );
 
   // Profile visits
   const { data: uniqueVisitors } = await supabase
@@ -318,22 +326,6 @@ function formatTimeAgo(timestamp: string): string {
       sizeRandomness={1.2}
     />
   </div>
-
-  <!-- Pill Navigation Bar
-  <nav class="pill-navbar">
-    <a href="/panel" class="pill-nav-item active">Dashboard</a>
-    <a href="/panel/messages" class="pill-nav-item">Messages</a>
-    <a href="/panel/projects" class="pill-nav-item">Projects</a>
-    <a href="/panel/analytics" class="pill-nav-item">Analytics</a>
-    <a href="/panel/media" class="pill-nav-item">Media</a>
-    <div class="pill-nav-divider"></div>
-    <a
-      href="/"
-      class="pill-nav-item"
-      onclick="sessionStorage.setItem('skipIntro', 'true')">Live Site</a
-    >
-    <button class="pill-nav-item logout" id="logoutBtn">Logout</button>
-  </nav> -->
 
   <PillNavbar activePage="dashboard" />
 
