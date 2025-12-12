@@ -506,6 +506,7 @@ const { activePage = "" } = Astro.props;
         await new Promise((resolve) => setTimeout(resolve, 300));
 
         // Redirect to panel (will show auth screen)
+        sessionStorage.setItem("just_logged_out", "true");
         window.location.href = "/panel";
       } catch (error) {
         console.error("❌ Logout error:", error);
