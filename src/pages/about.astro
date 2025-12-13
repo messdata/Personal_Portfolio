@@ -82,6 +82,16 @@ import Particles from "../components/welcome/Particles";
         background: rgba(0, 255, 255, 0.2);
       }
 
+      .nav-link.contact {
+        border: 1px solid rgba(0, 255, 255, 0.4);
+        background: rgba(0, 255, 255, 0.1);
+        color: rgba(255, 255, 255, 0.9);
+      }
+
+      .nav-link.contact:hover {
+        background: rgba(0, 255, 255, 0.2);
+      }
+
       /* Scroll Indicator Dots */
       .scroll-indicators {
         position: fixed;
@@ -433,14 +443,14 @@ import Particles from "../components/welcome/Particles";
           <div class="text-column fade-in">
             <h2 class="section-title" style="color: #1a8fb6;">Who Am I?</h2>
             <div class="section-description">
-              I am <b>Chinmay Patil</b>, born in <b>India</b>, BSC IT graduate
-              batch - <b>2018</b>, and I began my professional experience in the
-              same year. Like everyone else, I had no idea how things worked in
-              a professional atmosphere.
+              Hello, I am <b>Chinmay Patil</b>, born in <b>India</b>. Got my
+              bachelor's in Infromation Technology <b>2018</b> , started working
+              the same year. I still remeber the day 1 of my first job and the overwhelming
+              feeling of stepping into the corporate world.
               <br /><br />
-              Since then, I've had numerous opportunities to learn and explore new
-              things while working with some of the industry's greatest start-ups
-              and mentors.
+              Since then, I have had the opportunity of working with some of the
+              amazing start-ups and learning from top industry professionals, which
+              helped me shape my career.
               <br /><br />
               Scroll down ↓ to learn more about me.
             </div>
@@ -460,18 +470,18 @@ import Particles from "../components/welcome/Particles";
           <div class="text-column fade-in">
             <h2 class="section-title" style="color: #0df4f4;">The Master's</h2>
             <div class="section-description">
-              Moving to Ireland to pursue my MSc in Business Analytics was a
-              turning point – it reshaped how I think about data, teamwork, and
-              impact.
+              Master's from Maynooth University, Ireland in Business Analytics.
               <br /><br />
-              At Maynooth University, I worked on multiple client projects like <b
-                >Age Friendly Ireland (AFI) and Res4City</b
-              >, applying analytics to real-world sustainability and policy
-              challenges.
+              The course not only helped in making the business & analytical foundations
+              strong but it also taught right deligation methods, work bifurcation
+              and team management.
               <br /><br />
-              These experiences deepened my understanding of AI, machine learning,
-              and BI tools like Tableau, RapidMiner, and Python – and taught me how
-              to make insights readable to produce profitable outputs.
+              Working on real-time client projects like <b
+                >AFI- Age Friendly Ireland</b
+              > & <b>Res4City</b>
+              deepened my understanding of machine learning, and BI tools like Tableau,
+              RapidMiner, and Python – and taught me how to make insights readable
+              to produce profitable outputs.
             </div>
           </div>
           <div class="image-column fade-in">
@@ -522,120 +532,117 @@ import Particles from "../components/welcome/Particles";
           <div class="text-column fade-in">
             <h2 class="section-title" style="color: #ff00ff;">Life</h2>
             <div class="section-description">
-              I'm someone who enjoys building, learning, and reflecting. My
-              happy space usually involves coffee, some code, and a playlist of
-              calm beats.
+              I'm someone who enjoys building, learning, and reflecting.
+              Curosity is my main driver, it keeps me going and helps me
+              explore.
               <br /><br />
-              Outside work, I explore mythology, photography, and the art of storytelling
-              – whether it's through words, visuals, or analytics.
+              Outside work, I like to explore, get known to new clutures, go along
+              the highways and just keep looking at the sky. I like to understand
+              how a different preception can change course of the results.
               <br /><br />
-              <b
-                >'It's always about the perspective'. This is what I believe and
-                it helps me shape my life well.</b
-              >
-            </div>
-          </div>
-          <div class="image-column fade-in">
-            <div class="image-wrapper neon-border-magenta">
-              <img src="/images/Life.jpg" alt="Life and interests" />
-              <div class="image-overlay"></div>
+              My mantra stands to be -
+              <b>'It's always about the perspective'.</b>
+              This is what I believe and it helps me shape my life well.
             </div>
           </div>
         </div>
-      </section>
-
-      <!-- Section 5: Where I'm Headed -->
-      <section class="about-section bg-gradient-5">
-        <div class="section-content">
-          <div class="text-column fade-in">
-            <h2 class="section-title" style="color: #00ff00;">
-              Where I'm Headed
-            </h2>
-            <div class="section-description">
-              I want to keep building the bridge between analytics and human
-              experience – making insights easier to understand and decisions
-              more meaningful.
-              <br /><br />
-              In the longer term, I see myself driving data-led innovation in roles
-              that connect people, processes, and technology – shaping ideas that
-              truly make impact.
-            </div>
-          </div>
-          <div class="image-column fade-in">
-            <div class="image-wrapper neon-border-green">
-              <img src="/images/road.png" alt="Future vision" />
-              <div class="image-overlay"></div>
-            </div>
+        <div class="image-column fade-in">
+          <div class="image-wrapper neon-border-magenta">
+            <img src="/images/Life.jpg" alt="Life and interests" />
+            <div class="image-overlay"></div>
           </div>
         </div>
       </section>
     </main>
 
-    <script>
-      // Scroll indicator logic
-      const container = document.getElementById("about-container");
-      const dots = document.querySelectorAll(".scroll-dot");
-      const nav = document.getElementById("floating-nav");
-
-      let lastScrollTop = 0;
-      let scrollDelta = 0;
-
-      // FIXED: Improved nav behavior - only hide after significant scroll
-      container?.addEventListener("scroll", () => {
-        const scrollTop = container.scrollTop;
-        const scrollHeight = container.scrollHeight - container.clientHeight;
-        const scrollPercent = scrollTop / scrollHeight;
-
-        // Update active dot
-        const sectionIndex = Math.round(scrollPercent * 4);
-
-        dots.forEach((dot, index) => {
-          if (index === sectionIndex) {
-            dot.classList.add("active");
-          } else {
-            dot.classList.remove("active");
-          }
-        });
-
-        // Elevate nav on scroll
-        if (scrollTop > 50) {
-          nav?.classList.add("elevated");
-        } else {
-          nav?.classList.remove("elevated");
-        }
-
-        // FIXED: Better scroll direction detection with threshold
-        const diff = scrollTop - lastScrollTop;
-        scrollDelta += diff;
-
-        // Only hide/show nav after scrolling 100px in one direction
-        if (Math.abs(scrollDelta) > 200) {
-          if (scrollDelta > 0 && scrollTop > 300) {
-            // Scrolling down significantly
-            nav?.classList.add("hidden");
-          } else if (scrollDelta < 0) {
-            // Scrolling up
-            nav?.classList.remove("hidden");
-          }
-          scrollDelta = 0; // Reset delta
-        }
-
-        lastScrollTop = scrollTop;
-      });
-
-      // Click dot to scroll to section
-      dots.forEach((dot) => {
-        dot.addEventListener("click", () => {
-          const sectionIndex = parseInt(
-            dot.getAttribute("data-section") || "0",
-          );
-          const vh = window.innerHeight;
-          container?.scrollTo({
-            top: sectionIndex * vh,
-            behavior: "smooth",
-          });
-        });
-      });
-    </script>
+    <!-- Section 5: Where I'm Headed -->
+    <section class="about-section bg-gradient-5">
+      <div class="section-content">
+        <div class="text-column fade-in">
+          <h2 class="section-title" style="color: #00ff00;">
+            Where I'm Headed
+          </h2>
+          <div class="section-description">
+            Zomato's motto is - "It's always 1% done", this cleary states that
+            there a lot more to learn, achieve and explore.
+            <br /><br />
+            In the longer term, I see myself diving deeper into the world of Analytics.
+            Learning the patterns and behaiour of consumers as the technology keeps
+            advancing.
+          </div>
+        </div>
+        <div class="image-column fade-in">
+          <div class="image-wrapper neon-border-green">
+            <img src="/images/road.png" alt="Future vision" />
+            <div class="image-overlay"></div>
+          </div>
+        </div>
+      </div>
+    </section>
   </body>
+
+  <script>
+    // Scroll indicator logic
+    const container = document.getElementById("about-container");
+    const dots = document.querySelectorAll(".scroll-dot");
+    const nav = document.getElementById("floating-nav");
+
+    let lastScrollTop = 0;
+    let scrollDelta = 0;
+
+    // FIXED: Improved nav behavior - only hide after significant scroll
+    container?.addEventListener("scroll", () => {
+      const scrollTop = container.scrollTop;
+      const scrollHeight = container.scrollHeight - container.clientHeight;
+      const scrollPercent = scrollTop / scrollHeight;
+
+      // Update active dot
+      const sectionIndex = Math.round(scrollPercent * 4);
+
+      dots.forEach((dot, index) => {
+        if (index === sectionIndex) {
+          dot.classList.add("active");
+        } else {
+          dot.classList.remove("active");
+        }
+      });
+
+      // Elevate nav on scroll
+      if (scrollTop > 50) {
+        nav?.classList.add("elevated");
+      } else {
+        nav?.classList.remove("elevated");
+      }
+
+      // FIXED: Better scroll direction detection with threshold
+      const diff = scrollTop - lastScrollTop;
+      scrollDelta += diff;
+
+      // Only hide/show nav after scrolling 100px in one direction
+      if (Math.abs(scrollDelta) > 200) {
+        if (scrollDelta > 0 && scrollTop > 300) {
+          // Scrolling down significantly
+          nav?.classList.add("hidden");
+        } else if (scrollDelta < 0) {
+          // Scrolling up
+          nav?.classList.remove("hidden");
+        }
+        scrollDelta = 0; // Reset delta
+      }
+
+      lastScrollTop = scrollTop;
+    });
+
+    // Click dot to scroll to section
+    dots.forEach((dot) => {
+      dot.addEventListener("click", () => {
+        const sectionIndex = parseInt(dot.getAttribute("data-section") || "0");
+        const vh = window.innerHeight;
+        container?.scrollTo({
+          top: sectionIndex * vh,
+          behavior: "smooth",
+        });
+      });
+    });
+  </script>
 </html>
