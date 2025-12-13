@@ -550,6 +550,22 @@ const projectsData = (projects || []).map((project) => ({
         }
       }
 
+ .modal-content {
+        max-width: 90vw; /* Current: 95vw */
+        max-height: 90vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 2rem; /* Add breathing room */
+      }
+
+      .modal-content img {
+        max-width: 100%;
+        max-height: 80vh;
+        object-fit: contain;
+        border-radius: 8px; /* Optional: soften edges */
+      }
+
       .modal-header {
         padding: 2rem;
         border-bottom: 1px solid rgba(255, 255, 255, 0.1);
