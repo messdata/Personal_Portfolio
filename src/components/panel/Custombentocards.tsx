@@ -1,6 +1,6 @@
 import { useRef, useEffect, useState } from 'react';
 import { gsap } from 'gsap';
-import { supabase } from '../../lib/supabase';
+import { createClient } from '@supabase/supabase-js';
 import Counter from './Counter';
 import './CustomBentoCards.css';
 
@@ -51,16 +51,16 @@ function formatTimeAgo(timestamp: string): string {
   const now = new Date();
   const then = new Date(timestamp);
   const diffMs = now.getTime() - then.getTime();
-  
+
   const diffMinutes = Math.floor(diffMs / (1000 * 60));
   const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
   const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-  
+
   if (diffMinutes < 1) return 'Just now';
   if (diffMinutes < 60) return `${diffMinutes}m ago`;
   if (diffHours < 24) return `${diffHours}h ago`;
   if (diffDays < 30) return `${diffDays}d ago`;
-  
+
   const diffMonths = Math.floor(diffDays / 30);
   return `${diffMonths}mo ago`;
 }
@@ -83,16 +83,31 @@ const CustomBentoCards: React.FC<CustomBentoCardsProps> = ({
   const spotlightRef = useRef<HTMLDivElement>(null);
   const [isMobile, setIsMobile] = useState(false);
 
-  // Realtime state
-  const [totalProjects, setTotalProjects] = useState(initialProjects);
-  const [visibleProjects, setVisibleProjects] = useState(initialVisibleProjects);
-  const [totalMessages, setTotalMessages] = useState(initialMessages);
-  const [unreadMessages, setUnreadMessages] = useState(initialUnreadMessages);
-  const [totalViews, setTotalViews] = useState(initialViews);
-  const [totalMedia, setTotalMedia] = useState(initialMedia);
-  const [pageLiveDays, setPageLiveDays] = useState(initialPageLiveDays);
-  const [profileVisits, setProfileVisits] = useState(initialProfileVisits);
-  const [recentProjectViews, setRecentProjectViews] = useState<ProjectView[]>(initialRecentProjectViews);
+  // Realtime state - just use server values, no subscriptions
+  const [totalProjects] = useState(initialProjects);
+  const [visibleProjects] = useState(initialVisibleProjects);
+  const [totalMessages] = useState(initialMessages);
+  const [unreadMessages] = useState(initialUnreadMessages);
+  const [totalViews] = useState(initialViews);
+  const [totalMedia] = useState(initialMedia);
+  const [pageLiveDays] = useState(initialPageLiveDays);
+  const [profileVisits] = useState(initialProfileVisits);
+  const [recentProjectViews] = useState<ProjectView[]>(initialRecentProjectViews);
+
+  // Initialize Supabase client (not needed for display, but keeping for future)
+  const supabase = createClient(
+    import.meta.env.PUBLIC_SUPABASE_URL,
+    import.meta.env.PUBLIC_SUPABASE_ANON_KEY
+  );
+
+  useEffect(() => {
+    console.log('📊 Displaying values:', {
+      totalProjects: initialProjects,
+      totalMessages: initialMessages,
+      totalMedia: initialMedia,
+      totalViews: initialViews
+    });
+  }, []);
 
   useEffect(() => {
     const checkMobile = () => {
@@ -116,160 +131,16 @@ const CustomBentoCards: React.FC<CustomBentoCardsProps> = ({
     return () => document.removeEventListener('mousemove', handleMouseMove);
   }, [enableSpotlight, isMobile]);
 
-  // Realtime subscription for projects
-  useEffect(() => {
-    if (!supabase) return;
-    
-    const projectsChannel = supabase
-      .channel('projects-changes')
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'projects' },
-        async () => {
-          const { data } = await supabase.from('projects').select('id, visible');
-          if (data) {
-            setTotalProjects(data.length);
-            setVisibleProjects(data.filter((p) => p.visible).length);
-          }
-        }
-      )
-      .subscribe();
+  // useEffect(() => {
+  //   const interval = setInterval(() => {
+  //     const today = new Date();
+  //     const launchDate = new Date('2025-10-01');  // ← THIS ONE!
+  //     const days = Math.floor((today.getTime() - launchDate.getTime()) / (1000 * 60 * 60 * 24));
+  //     setPageLiveDays(days);
+  //   }, 60000); // Update every minute
 
-    return () => {
-      supabase.removeChannel(projectsChannel);
-    };
-  }, []);
-
-  // Realtime subscription for messages
-  useEffect(() => {
-    if (!supabase) return;
-    
-    const messagesChannel = supabase
-      .channel('messages-changes')
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'messages' },
-        async () => {
-          const { data } = await supabase.from('messages').select('id, is_read');
-          if (data) {
-            setTotalMessages(data.length);
-            setUnreadMessages(data.filter((m) => !m.is_read).length);
-          }
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(messagesChannel);
-    };
-  }, []);
-
-  // Realtime subscription for analytics
-  useEffect(() => {
-    if (!supabase) return;
-    
-    const analyticsChannel = supabase
-      .channel('analytics-changes')
-      .on(
-        'postgres_changes',
-        { event: 'INSERT', schema: 'public', table: 'analytics' },
-        async () => {
-          // Update total views
-          const { data: allAnalytics } = await supabase.from('analytics').select('id, visitor_id');
-          if (allAnalytics) {
-            setTotalViews(allAnalytics.length);
-            setProfileVisits(new Set(allAnalytics.map(v => v.visitor_id)).size);
-          }
-
-          // Update recent project views
-          const { data: projectAnalytics } = await supabase
-            .from('analytics')
-            .select('page_path, viewed_at, event_type')
-            .ilike('page_path', '%/project%')
-            .eq('event_type', 'page_view')
-            .order('viewed_at', { ascending: false })
-            .limit(50);
-
-          if (projectAnalytics) {
-            const projectViewsMap = new Map();
-
-            projectAnalytics.forEach((entry) => {
-              const pathParts = entry.page_path.split('/');
-              const projectSlug = pathParts[pathParts.length - 1] || 'Unknown';
-              
-              const projectName = projectSlug
-                .split('-')
-                .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-                .join(' ');
-
-              if (projectViewsMap.has(projectName)) {
-                const existing = projectViewsMap.get(projectName);
-                existing.view_count += 1;
-                if (new Date(entry.viewed_at) > new Date(existing.last_viewed_raw)) {
-                  existing.last_viewed_raw = entry.viewed_at;
-                  existing.last_viewed = formatTimeAgo(entry.viewed_at);
-                }
-              } else {
-                projectViewsMap.set(projectName, {
-                  project_name: projectName,
-                  view_count: 1,
-                  last_viewed: formatTimeAgo(entry.viewed_at),
-                  last_viewed_raw: entry.viewed_at
-                });
-              }
-            });
-
-            const updatedViews = Array.from(projectViewsMap.values())
-              .sort((a, b) => new Date(b.last_viewed_raw).getTime() - new Date(a.last_viewed_raw).getTime())
-              .slice(0, 5)
-              .map(({ last_viewed_raw, ...rest }) => rest);
-
-            setRecentProjectViews(updatedViews);
-          }
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(analyticsChannel);
-    };
-  }, []);
-
-  // Realtime subscription for media
-  useEffect(() => {
-    if (!supabase) return;
-    
-    const mediaChannel = supabase
-      .channel('media-changes')
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'media' },
-        async () => {
-          const { data } = await supabase.from('media').select('id');
-          if (data) {
-            setTotalMedia(data.length);
-          }
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(mediaChannel);
-    };
-  }, []);
-
-  // Update page live days every hour
-  useEffect(() => {
-    const updatePageLiveDays = () => {
-      const launchDate = new Date('2025-10-01');
-      const today = new Date();
-      const days = Math.floor((today.getTime() - launchDate.getTime()) / (1000 * 60 * 60 * 24));
-      setPageLiveDays(days);
-    };
-
-    const interval = setInterval(updatePageLiveDays, 1000 * 60 * 60); // Update every hour
-    return () => clearInterval(interval);
-  }, []);
+  //   return () => clearInterval(interval);
+  // }, []);
 
   return (
     <div className="custom-bento-section">
