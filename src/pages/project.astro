@@ -112,6 +112,16 @@ const projectsData = (projects || []).map((project) => ({
         color: white;
       }
 
+      .nav-link.resume {
+        border: 1px solid rgba(0, 255, 255, 0.4);
+        background: rgba(0, 255, 255, 0.1);
+        color: rgba(255, 255, 255, 0.9);
+      }
+
+      .nav-link.resume:hover {
+        background: rgba(0, 255, 255, 0.2);
+      }
+
       .projects-container {
         position: fixed;
         top: 0;
@@ -460,7 +470,7 @@ const projectsData = (projects || []).map((project) => ({
 
       .project-description {
         font-size: 0.875rem;
-        line-height: 1.6;
+        line-height: 1;
         color: rgba(255, 255, 255, 0.8);
         margin-bottom: 1rem;
       }
@@ -477,17 +487,17 @@ const projectsData = (projects || []).map((project) => ({
         }
       }
 
-      .project-tools {
+      /* .project-tools {
         font-size: 0.75rem;
         color: rgba(255, 255, 255, 0.6);
         font-weight: 500;
-      }
+      } */
 
-      @media (max-width: 480px) {
+      /* @media (max-width: 480px) {
         .project-tools {
           font-size: 0.65rem;
         }
-      }
+      } */
 
       /* Modal styles */
       .modal-overlay {
@@ -782,29 +792,20 @@ const projectsData = (projects || []).map((project) => ({
       >
       <a href="/about" class="nav-link">About</a>
       <a href="/contact" class="nav-link">Contact</a>
-      <a href="/cv" class="nav-link">Resume</a>
+      <a href="/cv" class="nav-link resume">Resume</a>
     </nav>
 
     <div class="projects-container">
       <div class="projects-wrapper">
         <header class="projects-header">
           <h1 class="projects-title">Projects Portfolio</h1>
-          <p class="projects-subtitle">
-            Data Analytics · Web Development · Case Studies
-          </p>
+          <p class="projects-subtitle">Data Analytics · Case Studies</p>
           <div class="filter-tabs">
             <button class="filter-tab active" data-filter="all"
               >All Projects</button
             >
             <button class="filter-tab" data-filter="analytics">Analytics</button
             >
-            <button class="filter-tab" data-filter="web-development"
-              >Web Development</button
-            >
-            <button class="filter-tab" data-filter="data-science"
-              >Data Science</button
-            >
-            <button class="filter-tab" data-filter="other">Other</button>
           </div>
         </header>
         <div class="projects-grid" id="projects-grid"></div>
@@ -883,7 +884,7 @@ const projectsData = (projects || []).map((project) => ({
                 <span class="project-category ${project.category}">${project.category.replace("-", " ")}</span>
                 <h3 class="project-name">${project.title}</h3>
                 <p class="project-description">${project.description}</p>
-                <p class="project-tools">Tools: ${project.tools.join(", ")}</p>
+                
               </div>
             </div>
           `;
