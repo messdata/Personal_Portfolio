@@ -551,15 +551,20 @@ draftProjects = allProjects.filter(p => !p.visible);
     }
 
     .modal-content {
-      background: #0a0a0a;
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      border-radius: 16px;
-      max-width: 900px;
-      width: 100%;
+      max-width: 90vw; /* Current: 95vw */
       max-height: 90vh;
-      overflow-y: auto;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem; /* Add breathing room */
     }
 
+    .modal-content img {
+      max-width: 100%;
+      max-height: 80vh;
+      object-fit: contain;
+      border-radius: 8px; /* Optional: soften edges */
+    }
     .modal-content::-webkit-scrollbar {
       width: 6px;
     }
